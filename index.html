@@ -1309,6 +1309,217 @@ page-break-after: always;
 </style>
 </head>
 <body>
+
+<!-- ============================================================
+LOGIN OVERLAY — Sistema de autenticación
+============================================================ -->
+<style>
+/* ── LOGIN OVERLAY ── */
+#loginOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--c-bg);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+}
+#loginOverlay.hidden {
+  display: none;
+}
+.login-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 48px 40px 40px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+.login-logo {
+  width: 64px;
+  height: 64px;
+  background: var(--c-primary);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+.login-logo svg {
+  width: 40px;
+  height: 40px;
+}
+.login-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--c-primary);
+  margin-bottom: 4px;
+}
+.login-subtitle {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+.login-field {
+  position: relative;
+  margin-bottom: 16px;
+  text-align: left;
+}
+.login-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 6px;
+}
+.login-field input {
+  width: 100%;
+  padding: 11px 44px 11px 14px;
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--c-text);
+  background: var(--c-bg);
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+}
+.login-field input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px rgba(46,125,170,.12);
+}
+.login-eye-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 11px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--c-text-muted);
+  font-size: 15px;
+  padding: 0;
+  line-height: 1;
+}
+.login-eye-btn:hover { color: var(--c-primary); }
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--c-text-muted);
+  margin-bottom: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+.login-remember input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--c-primary);
+  cursor: pointer;
+}
+.login-error {
+  background: #fdecea;
+  border: 1px solid #f5c6cb;
+  border-radius: var(--radius-sm);
+  color: var(--c-danger);
+  font-size: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: none;
+  text-align: left;
+}
+.login-error.show { display: block; }
+.login-locked {
+  background: #fff8e6;
+  border: 1px solid #ffd966;
+  border-radius: var(--radius-sm);
+  color: var(--c-warning);
+  font-size: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: none;
+  text-align: left;
+}
+.login-locked.show { display: block; }
+@keyframes loginShake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-8px); }
+  40%      { transform: translateX(8px); }
+  60%      { transform: translateX(-6px); }
+  80%      { transform: translateX(6px); }
+}
+.login-card.shake { animation: loginShake .4s ease; }
+.login-btn-full {
+  width: 100%;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+.login-footer-text {
+  font-size: 11px;
+  color: var(--c-text-light);
+  margin-top: 24px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+}
+</style>
+
+<div id="loginOverlay">
+  <div class="login-card" id="loginCard">
+    <!-- Logo/ícono del sistema -->
+    <div class="login-logo">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="32" cy="32" rx="26" ry="15" stroke="white" stroke-width="3"/>
+        <circle cx="32" cy="32" r="9" fill="white" opacity=".9"/>
+        <circle cx="29" cy="29" r="3" fill="rgba(26,61,92,.5)"/>
+      </svg>
+    </div>
+    <div class="login-title">Sistema de Recetas</div>
+    <div class="login-subtitle">Oftalmológicas v5.0</div>
+
+    <!-- Mensaje de bloqueo -->
+    <div class="login-locked" id="loginLocked">
+      <i class="fas fa-lock"></i> Demasiados intentos fallidos. Espere <strong id="lockCountdown">5:00</strong> minutos.
+    </div>
+    <!-- Mensaje de error -->
+    <div class="login-error" id="loginError">
+      <i class="fas fa-exclamation-circle"></i> Contraseña incorrecta. Intento <strong id="loginAttemptCount">1</strong>/5.
+    </div>
+
+    <!-- Campo contraseña -->
+    <div class="login-field">
+      <label for="loginPassword">Contraseña</label>
+      <input type="password" id="loginPassword" placeholder="Ingrese la contraseña"
+             onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="login-eye-btn" type="button" onclick="toggleLoginEye()" id="loginEyeBtn">
+        <i class="fas fa-eye" id="loginEyeIcon"></i>
+      </button>
+    </div>
+
+    <!-- Checkbox sesión extendida -->
+    <label class="login-remember">
+      <input type="checkbox" id="loginRemember">
+      Mantener sesión por 8 horas
+    </label>
+
+    <!-- Botón ingresar -->
+    <button class="btn btn-primary login-btn-full" onclick="doLogin()" id="loginBtn">
+      <i class="fas fa-sign-in-alt"></i> INGRESAR
+    </button>
+
+    <div class="login-footer-text">Acceso restringido al personal autorizado</div>
+  </div>
+</div>
+
 <!-- ============================================================
 SIDEBAR
 ============================================================ -->
@@ -2645,27 +2856,85 @@ function editPatient(id) {
 const patient = patients.find(p => p.id === id);
 if (!patient) { showToast('PACIENTE NO ENCONTRADO', 'error'); return; }
 
-// Cargar datos en el formulario
-document.getElementById('patientName').value = patient.name || '';
-document.getElementById('patientDNI').value = patient.dni || '';
-document.getElementById('patientHistory').value = patient.history || '';
-document.getElementById('patientSex').value = patient.sex || '';
-document.getElementById('patientBirthDate').value = patient.birthDate || '';
-document.getElementById('patientAge').value = patient.age || '';
-document.getElementById('patientPhone').value = patient.phone || '';
-document.getElementById('patientEmail').value = patient.email || '';
-document.getElementById('appointmentDate').value = patient.appointmentDate || '';
-document.getElementById('nextVisit').value = patient.nextVisit || '';
-document.getElementById('doctorName').value = patient.doctor || '';
+// ── PASO 1: Datos personales ──────────────────────────────────
+document.getElementById('patientName').value        = patient.name          || '';
+document.getElementById('patientDNI').value         = patient.dni           || '';
+document.getElementById('patientHistory').value     = patient.history       || '';
+document.getElementById('patientSex').value         = patient.sex           || '';
+document.getElementById('patientBirthDate').value   = patient.birthDate     || '';
+document.getElementById('patientAge').value         = patient.age           || '';
+document.getElementById('patientPhone').value       = patient.phone         || '';
+document.getElementById('patientEmail').value       = patient.email         || '';
+document.getElementById('appointmentDate').value    = patient.appointmentDate || '';
+document.getElementById('nextVisit').value          = patient.nextVisit     || '';
+document.getElementById('doctorName').value         = patient.doctor        || '';
 
-// Marcar modo edición
+// ── PASO 2: Refracción ─────────────────────────────────────────
+const rl = patient.refractionLejos || {};
+const rc = patient.refractionCerca || {};
+const odL = rl.od || {};  const oiL = rl.oi || {};
+const odC = rc.od || {};  const oiC = rc.oi || {};
+// Helper: asigna valor a selector de clase (primer elemento encontrado)
+const sq = (cls, val) => { const el = document.querySelector(`.${cls}`); if (el) el.value = val || ''; };
+const sg = (id,  val) => { const el = document.getElementById(id);       if (el) el.value = val || ''; };
+
+// Lejos — OD
+sq('sphere-od-lejos',   odL.sphere);   sq('cylinder-od-lejos', odL.cylinder);
+sq('axis-od-lejos',     odL.axis);     sq('add-od-lejos',      odL.add);
+sq('prism-od-lejos',    odL.prism);    sq('base-od-lejos',     odL.base);
+sq('av-od-lejos',       odL.av);       sq('dip-od-lejos',      odL.dip);
+// Lejos — OI
+sq('sphere-oi-lejos',   oiL.sphere);   sq('cylinder-oi-lejos', oiL.cylinder);
+sq('axis-oi-lejos',     oiL.axis);     sq('add-oi-lejos',      oiL.add);
+sq('prism-oi-lejos',    oiL.prism);    sq('base-oi-lejos',     oiL.base);
+sq('av-oi-lejos',       oiL.av);       sq('dip-oi-lejos',      oiL.dip);
+// Lejos — campos generales
+sg('nplOd',    rl.nplOd);  sg('nplOi', rl.nplOi);  sg('dipTotal', rl.dipTotal);
+
+// Cerca — OD
+sq('sphere-od-cerca',   odC.sphere);   sq('cylinder-od-cerca', odC.cylinder);
+sq('axis-od-cerca',     odC.axis);     sq('add-od-cerca',      odC.add);
+sq('prism-od-cerca',    odC.prism);    sq('base-od-cerca',     odC.base);
+sq('av-od-cerca',       odC.av);       sq('dip-od-cerca',      odC.dip);
+// Cerca — OI
+sq('sphere-oi-cerca',   oiC.sphere);   sq('cylinder-oi-cerca', oiC.cylinder);
+sq('axis-oi-cerca',     oiC.axis);     sq('add-oi-cerca',      oiC.add);
+sq('prism-oi-cerca',    oiC.prism);    sq('base-oi-cerca',     oiC.base);
+sq('av-oi-cerca',       oiC.av);       sq('dip-oi-cerca',      oiC.dip);
+// Cerca — campos generales
+sg('npcOd', rc.npcOd);  sg('npcOi', rc.npcOi);  sg('addIntermediate', rc.addIntermediate);
+
+// Recalcular EE y esferas de cerca después de cargar los datos
+['od','oi'].forEach(eye => {
+  calculateEE(eye, 'lejos');
+  calculateEE(eye, 'cerca');
+});
+
+// ── PASO 3: Diagnóstico ───────────────────────────────────────
+sg('diagnosis',        patient.diagnosis);
+sg('treatment',        patient.treatment);
+sg('lensType',         patient.lensType);
+sg('visualCapacityOD', patient.visualCapacityOD);
+sg('visualCapacityOI', patient.visualCapacityOI);
+sg('observationsOD',   patient.observationsOD);
+sg('observationsOI',   patient.observationsOI);
+sg('recommendations',  patient.recommendations);
+
+// ── PASO 4: Producto ──────────────────────────────────────────
+const prod = patient.product || {};
+sg('frameBrand',     prod.frameBrand);
+sg('frameCode',      prod.frameCode);
+sg('frameWarranty',  prod.frameWarranty);
+sg('invoiceNumber',  prod.invoiceNumber);
+sg('lensTypeProduct', prod.lensType);
+sg('lensMaterial',   prod.lensMaterial);
+sg('lensTreatment',  prod.lensTreatment);
+sg('lensWarranty',   prod.lensWarranty);
+
+// Marcar modo edición y navegar
 editingPatientId = id;
-
-// Ir a nueva receta paso 1
 navigateTo('new-prescription', null);
-nextStep(1);
-
-showToast('Editando paciente: ' + patient.name, 'warning');
+showToast('EDITANDO PACIENTE: ' + patient.name, 'warning');
 }
 
 function deletePatient(id) {
@@ -3404,6 +3673,133 @@ document.addEventListener('keydown', e => {
 if (e.key === 'Escape') { closeModal(); closeViewModal(); }
 });
 }
+</script>
+
+<!-- ================================================================
+LOGIN — Script de autenticación
+================================================================ -->
+<script>
+(function () {
+  // ── Contraseña ofuscada con btoa (no texto plano) ──────────────
+  // Valor codificado de "43882640"
+  const _k = 'NDM4ODI2NDA=';
+  const _chk = v => btoa(v) === _k;
+
+  // ── Claves de almacenamiento ───────────────────────────────────
+  const SS_KEY   = 'rx_sess_ok';         // sessionStorage (cierra al cerrar pestaña)
+  const LS_KEY   = 'rx_sess_ext';        // localStorage   (sesión extendida 8h)
+  const LS_TIME  = 'rx_sess_ext_ts';     // timestamp de inicio de sesión extendida
+  const LK_KEY   = 'rx_lockuntil';       // timestamp de bloqueo
+  const AT_KEY   = 'rx_attempts';        // contador de intentos fallidos
+  const MAX_AT   = 5;                    // intentos máximos
+  const EXT_MS   = 8 * 60 * 60 * 1000;  // 8 horas en ms
+  const LK_MS    = 5 * 60 * 1000;       // 5 minutos de bloqueo en ms
+
+  // ── Verifica si ya hay sesión válida ───────────────────────────
+  function sessionValid () {
+    // Sesión de pestaña (sessionStorage)
+    if (sessionStorage.getItem(SS_KEY) === '1') return true;
+    // Sesión extendida (localStorage con timestamp)
+    const ts = parseInt(localStorage.getItem(LS_TIME) || '0', 10);
+    if (localStorage.getItem(LS_KEY) === '1' && ts && Date.now() - ts < EXT_MS) {
+      sessionStorage.setItem(SS_KEY, '1'); // refrescar en sesión actual
+      return true;
+    }
+    return false;
+  }
+
+  // ── Ocultar overlay si sesión es válida ────────────────────────
+  if (sessionValid()) {
+    document.getElementById('loginOverlay').classList.add('hidden');
+  }
+
+  // ── Bloqueo — actualizar UI en tiempo real ─────────────────────
+  let _lockTimer = null;
+  function checkLock () {
+    const until = parseInt(localStorage.getItem(LK_KEY) || '0', 10);
+    const remaining = until - Date.now();
+    const lockedEl   = document.getElementById('loginLocked');
+    const btnEl      = document.getElementById('loginBtn');
+    const pwEl       = document.getElementById('loginPassword');
+    if (remaining > 0) {
+      lockedEl.classList.add('show');
+      btnEl.disabled = true;
+      pwEl.disabled  = true;
+      const m = String(Math.floor(remaining / 60000)).padStart(1,'0');
+      const s = String(Math.floor((remaining % 60000) / 1000)).padStart(2,'0');
+      document.getElementById('lockCountdown').textContent = `${m}:${s}`;
+      if (!_lockTimer) _lockTimer = setInterval(checkLock, 1000);
+    } else {
+      lockedEl.classList.remove('show');
+      btnEl.disabled = false;
+      pwEl.disabled  = false;
+      localStorage.removeItem(LK_KEY);
+      localStorage.setItem(AT_KEY, '0');
+      if (_lockTimer) { clearInterval(_lockTimer); _lockTimer = null; }
+    }
+  }
+  checkLock();
+
+  // ── Mostrar/ocultar contraseña ─────────────────────────────────
+  window.toggleLoginEye = function () {
+    const pw   = document.getElementById('loginPassword');
+    const icon = document.getElementById('loginEyeIcon');
+    if (pw.type === 'password') {
+      pw.type = 'text';
+      icon.className = 'fas fa-eye-slash';
+    } else {
+      pw.type = 'password';
+      icon.className = 'fas fa-eye';
+    }
+  };
+
+  // ── Lógica de login ────────────────────────────────────────────
+  window.doLogin = function () {
+    // Re-verificar bloqueo
+    const until = parseInt(localStorage.getItem(LK_KEY) || '0', 10);
+    if (Date.now() < until) { checkLock(); return; }
+
+    const pw      = document.getElementById('loginPassword').value;
+    const errEl   = document.getElementById('loginError');
+    const card    = document.getElementById('loginCard');
+    const cntEl   = document.getElementById('loginAttemptCount');
+    const remEl   = document.getElementById('loginRemember');
+
+    if (_chk(pw)) {
+      // ✅ Contraseña correcta
+      errEl.classList.remove('show');
+      localStorage.setItem(AT_KEY, '0');
+
+      if (remEl.checked) {
+        // Sesión extendida 8h
+        localStorage.setItem(LS_KEY, '1');
+        localStorage.setItem(LS_TIME, String(Date.now()));
+      }
+      sessionStorage.setItem(SS_KEY, '1');
+      document.getElementById('loginOverlay').classList.add('hidden');
+    } else {
+      // ❌ Contraseña incorrecta
+      let attempts = parseInt(localStorage.getItem(AT_KEY) || '0', 10) + 1;
+      localStorage.setItem(AT_KEY, String(attempts));
+
+      cntEl.textContent = attempts;
+      errEl.classList.add('show');
+
+      // Animación shake
+      card.classList.remove('shake');
+      void card.offsetWidth; // reflow para reiniciar animación
+      card.classList.add('shake');
+
+      // Bloqueo tras 5 intentos
+      if (attempts >= MAX_AT) {
+        localStorage.setItem(LK_KEY, String(Date.now() + LK_MS));
+        localStorage.setItem(AT_KEY, '0');
+        errEl.classList.remove('show');
+        checkLock();
+      }
+    }
+  };
+})();
 </script>
 </body>
 </html>
