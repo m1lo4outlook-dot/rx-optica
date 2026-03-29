@@ -2935,7 +2935,7 @@ container.innerHTML = `
 const SUPABASE_URL     = 'https://ecpwlqvawbjahblwmbvo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_82wvSX7vDgKuQzJuRNUoEQ_sXKdW3M4';
 
-let supabase            = null;
+let _sb            = null;
 let realtimeChannel     = null;
 let realtimeInitialized = false; // ✅ evita suscripciones múltiples
 let isLoading           = false;  // ✅ mutex anti loop-infinito
@@ -2948,7 +2948,7 @@ function initSupabase() {
       setTimeout(initSupabase, 500);
       return;
     }
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('[Supabase] ✅ Cliente inicializado');
     // Conectar ahora que el cliente está listo
     cargarPacientes()
@@ -2956,7 +2956,7 @@ function initSupabase() {
       .catch(e => console.error('[Supabase] Error inicial:', e));
   } catch(e) {
     console.error('[Supabase] Error al inicializar:', e);
-    supabase = null;
+    _sb = null;
   }
 }
 
@@ -2967,11 +2967,11 @@ function initSupabase() {
 // ✅ VERSIÓN SEGURA con mutex — evita loops infinitos
 async function cargarPacientes() {
   if (isLoading) { console.log('[Supabase] Ya está cargando, skip.'); return; }
-  if (!supabase)  { console.warn('[Supabase] No inicializado'); return; }
+  if (!_sb)  { console.warn('[Supabase] No inicializado'); return; }
   isLoading = true;
   console.log('[Supabase] Cargando pacientes...');
   try {
-    const { data, error } = await supabase
+    const { data, error } = await _sb
       .from('patients')
       .select('*')
       .order('id', { ascending: false });
@@ -2997,9 +2997,9 @@ async function cargarPacientes() {
 }
 
 async function guardarPaciente(paciente) {
-  if (!supabase) { console.warn('[Supabase] No inicializado'); return; }
+  if (!_sb) { console.warn('[Supabase] No inicializado'); return; }
   try {
-    const { error } = await supabase
+    const { error } = await _sb
       .from('patients')
       .upsert({ id: paciente.id, data: paciente }, { onConflict: 'id' });
     if (error) throw error;
@@ -3012,9 +3012,9 @@ async function guardarPaciente(paciente) {
 }
 
 async function actualizarPaciente(paciente) {
-  if (!supabase) { console.warn('[Supabase] No inicializado'); return; }
+  if (!_sb) { console.warn('[Supabase] No inicializado'); return; }
   try {
-    const { error } = await supabase
+    const { error } = await _sb
       .from('patients')
       .update({ data: paciente })
       .eq('id', paciente.id);
@@ -3027,9 +3027,9 @@ async function actualizarPaciente(paciente) {
 }
 
 async function eliminarPaciente(id) {
-  if (!supabase) { console.warn('[Supabase] No inicializado'); return; }
+  if (!_sb) { console.warn('[Supabase] No inicializado'); return; }
   try {
-    const { error } = await supabase
+    const { error } = await _sb
       .from('patients')
       .delete()
       .eq('id', id);
@@ -3070,12 +3070,12 @@ function saveData() {
 // ================================================================
 function initRealtime() {
   // ✅ Una sola suscripción garantizada
-  if (!supabase || realtimeInitialized) return;
+  if (!_sb || realtimeInitialized) return;
   realtimeInitialized = true;
 
   console.log('[Realtime] Iniciando suscripción...');
 
-  realtimeChannel = supabase
+  realtimeChannel = _sb
     .channel('patients-changes')
     .on(
       'postgres_changes',
@@ -3210,8 +3210,8 @@ const data = JSON.parse(e.target.result);
 if (data.patients && Array.isArray(data.patients)) {
 showModal(`¿IMPORTAR BACKUP?`, `SE IMPORTARÁN ${data.patients.length} PACIENTES. LOS DATOS ACTUALES SE REEMPLAZARÁN.`, async () => {
   // Borrar todos en Supabase
-  if (supabase) {
-    const { error } = await supabase.from('patients').delete().neq('id', 0);
+  if (_sb) {
+    const { error } = await _sb.from('patients').delete().neq('id', 0);
     if (error) console.error('[Supabase] Error al limpiar pacientes:', error);
   }
   patients    = data.patients;
@@ -3291,8 +3291,8 @@ if (!bk) return;
 const data = bk.data;
 if (!data.patients || !Array.isArray(data.patients)) { showToast('BACKUP INVÁLIDO', 'error'); return; }
 showModal(`¿RESTAURAR BACKUP?`, `SE RESTAURARÁN ${data.patients.length} PACIENTES DESDE "${bk.name}". LOS DATOS ACTUALES SE REEMPLAZARÁN.`, async () => {
-  if (supabase) {
-    const { error } = await supabase.from('patients').delete().neq('id', 0);
+  if (_sb) {
+    const { error } = await _sb.from('patients').delete().neq('id', 0);
     if (error) console.error('[Supabase] Error al limpiar pacientes:', error);
   }
   patients    = data.patients;
@@ -3351,8 +3351,8 @@ function confirmAction() {
 }
 function confirmClearAllData() {
 showModal('⚠️ ¿ELIMINAR TODOS LOS DATOS?', 'ESTA ACCIÓN ELIMINARÁ PERMANENTEMENTE TODOS LOS PACIENTES Y CONFIGURACIONES. ¡ASEGÚRESE DE TENER UN BACKUP!', async () => {
-if (supabase) {
-  const { error } = await supabase.from('patients').delete().neq('id', 0);
+if (_sb) {
+  const { error } = await _sb.from('patients').delete().neq('id', 0);
   if (error) console.error('[Supabase] Error al limpiar:', error);
 }
 localStorage.clear();
