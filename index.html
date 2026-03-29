@@ -2155,10 +2155,10 @@ MODAL: VER PACIENTE / RECETA GUARDADA
 </div>
 </div>
 <!-- Toastify JS -->
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<!-- Supabase CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js" defer></script>
+<!-- Supabase CDN — defer: nunca bloquea el renderizado -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script defer>
 // ================================================================
 // GLOBAL STATE
 // ================================================================
@@ -2175,14 +2175,30 @@ let editingPatientId = null; // ✅ NUEVO: ID del paciente en edición
 // ================================================================
 // INIT
 // ================================================================
-document.addEventListener('DOMContentLoaded', async () => {
-initSupabase();
-await loadData();
-updateDashboard();
-setupEventListeners();
-checkAutoBackup();
-applySavedTheme();
-renderBackupList();
+document.addEventListener('DOMContentLoaded', () => {
+  // ── PASO 1: UI lista al instante, sin red, sin await ──────────────
+  applySavedTheme();
+
+  try {
+    const s = localStorage.getItem('rx_settings');
+    const b = localStorage.getItem('rx_backup_info');
+    const p = localStorage.getItem('rx_patients');
+    if (s) { settings = JSON.parse(s); }
+    if (b) { const bi = JSON.parse(b); backupCount = bi.count||0; lastBackupTime = bi.lastTime||null; }
+    if (p) { patients = JSON.parse(p); }
+  } catch(e) { console.warn('[Init] localStorage:', e); }
+
+  updateDashboard();
+  renderPatientsList();
+  updateBackupStatus();
+  renderBackupList();
+  loadSettingsToForm();
+  updateSidebarLogo();
+  setupEventListeners();
+  checkAutoBackup();
+
+  // ── PASO 2: Supabase en segundo plano, UI ya es 100% funcional ───
+  setTimeout(initSupabase, 100);
 });
 
 // ================================================================
@@ -2599,21 +2615,6 @@ setTimeout(() => { win.print(); win.close(); }, 800);
 }
 
 // ================================================================
-// SAVE PRESCRIPTION
-// ================================================================
-function savePrescription() {
-const data = collectPatientData();
-if (!data.name) { showToast('EL NOMBRE DEL PACIENTE ES OBLIGATORIO', 'error'); return; }
-data.id        = Date.now();
-data.createdAt = new Date().toISOString();
-patients.unshift(data);
-saveData();
-showToast('RECETA GUARDADA EXITOSAMENTE', 'success');
-if (patients.length % 5 === 0) exportBackup(true);
-setTimeout(() => { navigateTo('dashboard', null); resetForm(); }, 1500);
-}
-
-// ================================================================
 // RESET FORM
 // ================================================================
 function resetForm() {
@@ -2677,29 +2678,30 @@ showToast('Paciente eliminado correctamente', 'success');
 }
 }
 
-// Modificar savePrescription para soportar edición + Supabase
-const originalSavePrescription = savePrescription;
-savePrescription = async function() {
+// ================================================================
+// SAVE PRESCRIPTION — versión final (edición + creación + Supabase)
+// ================================================================
+async function savePrescription() {
 const data = collectPatientData();
 if (!data.name) { showToast('EL NOMBRE DEL PACIENTE ES OBLIGATORIO', 'error'); return; }
 
 if (editingPatientId) {
-  // Modo edición: actualizar paciente existente
   const index = patients.findIndex(p => p.id === editingPatientId);
   if (index !== -1) {
-    data.id = editingPatientId;
+    data.id        = editingPatientId;
     data.createdAt = patients[index].createdAt;
     patients[index] = data;
-    await actualizarPaciente(data);
+    // Supabase en segundo plano — no bloquea la UI
+    actualizarPaciente(data).catch(e => console.error(e));
     showToast('PACIENTE ACTUALIZADO EXITOSAMENTE', 'success');
   }
   editingPatientId = null;
 } else {
-  // Modo creación: nuevo paciente
-  data.id = Date.now();
+  data.id        = Date.now();
   data.createdAt = new Date().toISOString();
   patients.unshift(data);
-  await guardarPaciente(data);
+  // Supabase en segundo plano — no bloquea la UI
+  guardarPaciente(data).catch(e => console.error(e));
   showToast('RECETA GUARDADA EXITOSAMENTE', 'success');
 }
 
@@ -2941,10 +2943,20 @@ let _pendingReload      = false;  // ✅ debounce para eventos rápidos
 
 function initSupabase() {
   try {
+    if (typeof window.supabase === 'undefined' || typeof window.supabase.createClient !== 'function') {
+      console.warn('[Supabase] CDN aún no disponible, reintentando en 500ms...');
+      setTimeout(initSupabase, 500);
+      return;
+    }
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('[Supabase] Cliente inicializado');
+    console.log('[Supabase] ✅ Cliente inicializado');
+    // Conectar ahora que el cliente está listo
+    cargarPacientes()
+      .then(() => initRealtime())
+      .catch(e => console.error('[Supabase] Error inicial:', e));
   } catch(e) {
     console.error('[Supabase] Error al inicializar:', e);
+    supabase = null;
   }
 }
 
@@ -3030,7 +3042,7 @@ async function eliminarPaciente(id) {
 }
 
 async function loadData() {
-  // Cargar settings desde localStorage (no viajan a Supabase)
+  // Usado para recargas manuales — el init ya no llama a esta función
   try {
     const s = localStorage.getItem('rx_settings');
     const b = localStorage.getItem('rx_backup_info');
@@ -3043,9 +3055,7 @@ async function loadData() {
     }
     renderBackupList();
   } catch(e) { console.warn('Error loading settings', e); }
-  // Cargar pacientes desde Supabase
   await cargarPacientes();
-  // Iniciar Realtime
   initRealtime();
 }
 
@@ -3331,7 +3341,14 @@ function closeModal() {
 document.getElementById('confirmModal').classList.remove('show');
 confirmCallback = null;
 }
-function confirmAction() { if (confirmCallback) confirmCallback(); }
+function confirmAction() {
+  if (!confirmCallback) return;
+  const result = confirmCallback();
+  // Si el callback es async, capturar errores sin bloquear
+  if (result && typeof result.catch === 'function') {
+    result.catch(e => console.error('[Modal] Error en acción:', e));
+  }
+}
 function confirmClearAllData() {
 showModal('⚠️ ¿ELIMINAR TODOS LOS DATOS?', 'ESTA ACCIÓN ELIMINARÁ PERMANENTEMENTE TODOS LOS PACIENTES Y CONFIGURACIONES. ¡ASEGÚRESE DE TENER UN BACKUP!', async () => {
 if (supabase) {
