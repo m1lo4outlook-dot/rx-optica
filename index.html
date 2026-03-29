@@ -1,0 +1,3392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Sistema Profesional de Recetas Oftalmológicas">
+<title>Sistema de Recetas Oftalmológicas</title>
+<!-- Google Fonts: Lato + Playfair Display -->
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Toastify CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<style>
+/* ============================================================
+CSS CUSTOM PROPERTIES — TEMA MÉDICO PROFESIONAL
+============================================================ */
+:root {
+/* Paleta principal — Azul médico sobrio */
+--c-primary:       #1a3d5c;
+--c-primary-mid:   #24527a;
+--c-primary-light: #d6e8f5;
+--c-accent:        #2e7daa;
+--c-accent-hover:  #245e82;
+/* Neutros */
+--c-bg:            #f4f6f9;
+--c-surface:       #ffffff;
+--c-border:        #d8dfe8;
+--c-text:          #1c2a38;
+--c-text-muted:    #5a7080;
+--c-text-light:    #8da4b4;
+/* Estados */
+--c-success:       #1e7d55;
+--c-danger:        #c0392b;
+--c-warning:       #b8780e;
+--c-auto-bg:       #eaf4ff;
+--c-auto-border:   #90c4e4;
+/* Tipografía */
+--font-body:    'Lato', sans-serif;
+--font-display: 'Playfair Display', serif;
+/* Espaciado y forma */
+--radius-sm: 6px;
+--radius-md: 10px;
+--radius-lg: 16px;
+--shadow-sm: 0 1px 4px rgba(0,0,0,.07);
+--shadow-md: 0 4px 16px rgba(0,0,0,.10);
+--shadow-lg: 0 8px 32px rgba(0,0,0,.12);
+/* Sidebar */
+--sidebar-w: 220px;
+}
+
+/* TEMA ROSADO - ALTO CONTRASTE ✅ NUEVO */
+html[data-theme="pink"] {
+--c-primary:       #C2185B;
+--c-primary-mid:   #8E0038;
+--c-primary-light: #F48FB1;
+--c-accent:        #EC407A;
+--c-accent-hover:  #AD1457;
+--c-bg:            #FCE4EC;
+--c-surface:       #FFFFFF;
+--c-border:        #F8BBD0;
+--c-text:          #212121;
+--c-text-muted:    #616161;
+--c-text-light:    #880E4F;
+--c-success:       #2E7D32;
+--c-danger:        #C62828;
+--c-warning:       #E65100;
+--c-auto-bg:       #F8BBD0;
+--c-auto-border:   #EC407A;
+}
+
+/* Tema Oscuro/Serio opcional (clase en <html>) */
+html[data-theme="dark"] {
+--c-primary:       #2e7daa;
+--c-primary-mid:   #3a94c8;
+--c-primary-light: #1a3d5c;
+--c-bg:            #0f1c27;
+--c-surface:       #162330;
+--c-border:        #1e3042;
+--c-text:          #d8e6f0;
+--c-text-muted:    #7fa8c2;
+--c-text-light:    #4d7a96;
+}
+
+html[data-theme="green"] {
+--c-primary:       #1a5c3a;
+--c-primary-mid:   #227a4e;
+--c-primary-light: #d4f0e2;
+--c-accent:        #2e9966;
+--c-accent-hover:  #1e7a52;
+}
+
+html[data-theme="slate"] {
+--c-primary:       #334155;
+--c-primary-mid:   #475569;
+--c-primary-light: #e2e8f0;
+--c-accent:        #64748b;
+--c-accent-hover:  #4b5869;
+}
+
+/* ============================================================
+BACKUP LIST ITEMS
+============================================================ */
+.backup-item {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 12px 16px;
+border: 1.5px solid var(--c-border);
+border-radius: var(--radius-sm);
+background: var(--c-surface);
+transition: box-shadow .2s;
+}
+.backup-item:first-child {
+border-color: #16a34a;
+background: #f0fdf4;
+}
+.backup-item:hover { box-shadow: var(--shadow-sm); }
+.backup-item-name {
+color: #16a34a;
+font-weight: 700;
+font-size: 13px;
+letter-spacing: .3px;
+font-family: var(--font-body);
+}
+.backup-item:first-child .backup-item-name::before {
+content: '● ';
+font-size: 10px;
+}
+.backup-item-meta {
+font-size: 11px;
+color: var(--c-text-muted);
+margin-top: 2px;
+}
+.backup-item-actions {
+display: flex;
+gap: 8px;
+flex-shrink: 0;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+font-family: var(--font-body);
+background: var(--c-bg);
+color: var(--c-text);
+min-height: 100vh;
+display: flex;
+font-size: 14px;
+line-height: 1.6;
+/* Forzar MAYÚSCULAS globalmente, excepto email */
+text-transform: uppercase;
+}
+/* Excepción: email no aplica mayúsculas */
+input[type="email"],
+input[type="email"]::placeholder {
+text-transform: none !important;
+}
+/* Excepciones para UI elements que no deben estar en mayúsculas */
+.no-upper,
+.no-upper * {
+text-transform: none !important;
+}
+
+/* ============================================================
+SIDEBAR NAVEGACIÓN
+============================================================ */
+.sidebar {
+width: var(--sidebar-w);
+min-height: 100vh;
+background: var(--c-primary);
+display: flex;
+flex-direction: column;
+position: fixed;
+top: 0;
+left: 0;
+z-index: 100;
+transition: transform .3s ease;
+}
+.sidebar-logo {
+padding: 24px 20px 20px;
+background: white;
+border-bottom: 1px solid rgba(255,255,255,.12);
+cursor: pointer;
+}
+.sidebar-logo-img {
+width: 100%;
+max-height: 74px;
+object-fit: contain;
+object-position: center;
+display: block;
+margin-bottom: 8px;
+}
+.sidebar-logo-placeholder {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.sidebar-logo-icon {
+width: 40px;
+height: 40px;
+background: rgba(255,255,255,.15);
+border-radius: var(--radius-sm);
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+}
+.sidebar-logo-icon svg {
+width: 24px;
+height: 24px;
+}
+.sidebar-logo-text h1 {
+font-family: var(--font-display);
+font-size: 16px;
+color: #fff;
+line-height: 1.2;
+text-transform: none;
+}
+.sidebar-logo-text p {
+font-size: 10px;
+color: rgba(255,255,255,.55);
+letter-spacing: 1px;
+margin-top: 2px;
+text-transform: uppercase;
+}
+.sidebar-nav {
+flex: 1;
+padding: 16px 0;
+}
+.nav-label {
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 1.5px;
+color: rgba(255,255,255,.4);
+padding: 12px 20px 6px;
+}
+.nav-item {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 12px 20px;
+color: rgba(255,255,255,.7);
+text-decoration: none;
+cursor: pointer;
+transition: all .2s ease;
+border-left: 3px solid transparent;
+font-size: 13px;
+font-weight: 400;
+letter-spacing: .5px;
+}
+.nav-item i { width: 18px; text-align: center; font-size: 14px; }
+.nav-item:hover {
+background: rgba(255,255,255,.08);
+color: #fff;
+}
+.nav-item.active {
+background: rgba(255,255,255,.14);
+border-left-color: #fff;
+color: #fff;
+font-weight: 700;
+}
+.sidebar-footer {
+padding: 16px 20px;
+border-top: 1px solid rgba(255,255,255,.12);
+}
+.backup-chip {
+display: flex;
+align-items: center;
+gap: 8px;
+font-size: 11px;
+color: rgba(255,255,255,.5);
+}
+.backup-chip i { color: rgba(255,255,255,.4); }
+.backup-chip strong {
+color: rgba(255,255,255,.75);
+font-weight: 700;
+}
+
+/* ============================================================
+MAIN LAYOUT
+============================================================ */
+.main-wrapper {
+margin-left: var(--sidebar-w);
+flex: 1;
+display: flex;
+flex-direction: column;
+min-height: 100vh;
+}
+/* Top bar */
+.topbar {
+background: var(--c-surface);
+border-bottom: 1px solid var(--c-border);
+padding: 0 32px;
+height: 60px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+position: sticky;
+top: 0;
+z-index: 50;
+}
+.topbar-title {
+font-size: 15px;
+font-weight: 700;
+color: var(--c-text);
+letter-spacing: .5px;
+}
+.topbar-actions {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.theme-btn {
+width: 28px;
+height: 28px;
+border-radius: 50%;
+border: 2px solid var(--c-border);
+cursor: pointer;
+transition: transform .2s;
+outline: none;
+}
+.theme-btn:hover { transform: scale(1.15); }
+.theme-btn[data-theme="default"] { background: #1a3d5c; }
+.theme-btn[data-theme="green"]   { background: #1a5c3a; }
+.theme-btn[data-theme="slate"]   { background: #334155; }
+.theme-btn[data-theme="dark"]    { background: #0f1c27; border-color: #2e7daa; }
+.theme-btn[data-theme="pink"]    { background: #C2185B; border-color: #F48FB1; }
+.hamburger {
+display: none;
+background: none;
+border: none;
+color: var(--c-text);
+font-size: 20px;
+cursor: pointer;
+}
+
+/* ============================================================
+CONTENT AREA
+============================================================ */
+.content {
+padding: 32px;
+flex: 1;
+}
+/* Sections */
+.section { display: none; }
+.section.active { display: block; animation: fadeUp .25s ease; }
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(12px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+CARDS & PANELS
+============================================================ */
+.card {
+background: var(--c-surface);
+border-radius: var(--radius-lg);
+border: 1px solid var(--c-border);
+box-shadow: var(--shadow-sm);
+}
+.card-header {
+padding: 20px 24px;
+border-bottom: 1px solid var(--c-border);
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+.card-header h2, .card-header h3 {
+font-size: 14px;
+font-weight: 700;
+color: var(--c-text);
+display: flex;
+align-items: center;
+gap: 8px;
+letter-spacing: .5px;
+}
+.card-header h2 i, .card-header h3 i {
+color: var(--c-accent);
+font-size: 14px;
+}
+.card-body { padding: 24px; }
+
+/* ============================================================
+DASHBOARD HERO
+============================================================ */
+.hero {
+background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-accent) 100%);
+border-radius: var(--radius-lg);
+padding: 36px 32px;
+color: #fff;
+margin-bottom: 24px;
+position: relative;
+overflow: hidden;
+}
+.hero::after {
+content: '';
+position: absolute;
+top: -40px;
+right: -40px;
+width: 200px;
+height: 200px;
+border-radius: 50%;
+background: rgba(255,255,255,.06);
+}
+.hero::before {
+content: '';
+position: absolute;
+bottom: -60px;
+right: 80px;
+width: 140px;
+height: 140px;
+border-radius: 50%;
+background: rgba(255,255,255,.04);
+}
+.hero h2 {
+font-family: var(--font-display);
+font-size: 26px;
+font-weight: 700;
+margin-bottom: 6px;
+position: relative;
+text-transform: none;
+}
+.hero p {
+font-size: 13px;
+opacity: .8;
+position: relative;
+text-transform: none;
+}
+
+/* ============================================================
+STAT CARDS
+============================================================ */
+.stats-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 16px;
+margin-bottom: 24px;
+}
+.stat-card {
+background: var(--c-surface);
+border: 1px solid var(--c-border);
+border-radius: var(--radius-md);
+padding: 20px;
+transition: box-shadow .2s, transform .2s;
+}
+.stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.stat-card .icon {
+width: 40px;
+height: 40px;
+border-radius: var(--radius-sm);
+display: flex;
+align-items: center;
+justify-content: center;
+margin-bottom: 12px;
+font-size: 18px;
+}
+.stat-card .value {
+font-size: 28px;
+font-weight: 900;
+line-height: 1;
+margin-bottom: 4px;
+}
+.stat-card .label {
+font-size: 11px;
+color: var(--c-text-muted);
+letter-spacing: .5px;
+}
+
+/* ============================================================
+BUTTONS
+============================================================ */
+.btn {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+padding: 10px 20px;
+border-radius: var(--radius-sm);
+border: none;
+cursor: pointer;
+font-family: var(--font-body);
+font-size: 12px;
+font-weight: 700;
+letter-spacing: .8px;
+text-transform: uppercase;
+transition: all .2s ease;
+text-decoration: none;
+}
+.btn-primary {
+background: var(--c-primary);
+color: #fff;
+}
+.btn-primary:hover {
+background: var(--c-primary-mid);
+box-shadow: 0 4px 12px rgba(26,61,92,.35);
+transform: translateY(-1px);
+}
+.btn-accent {
+background: var(--c-accent);
+color: #fff;
+}
+.btn-accent:hover {
+background: var(--c-accent-hover);
+box-shadow: 0 4px 12px rgba(46,125,170,.35);
+transform: translateY(-1px);
+}
+.btn-ghost {
+background: var(--c-bg);
+color: var(--c-text-muted);
+border: 1px solid var(--c-border);
+}
+.btn-ghost:hover {
+background: var(--c-border);
+color: var(--c-text);
+}
+.btn-danger {
+background: var(--c-danger);
+color: #fff;
+}
+.btn-danger:hover {
+background: #a93226;
+box-shadow: 0 4px 12px rgba(192,57,43,.35);
+transform: translateY(-1px);
+}
+.btn-success {
+background: var(--c-success);
+color: #fff;
+}
+.btn-success:hover {
+background: #165f40;
+transform: translateY(-1px);
+}
+.btn-sm { padding: 7px 14px; font-size: 11px; }
+.btn-lg { padding: 13px 28px; font-size: 13px; }
+
+/* ============================================================
+FORM ELEMENTS
+============================================================ */
+.form-group { margin-bottom: 16px; }
+.form-label {
+display: block;
+font-size: 11px;
+font-weight: 700;
+color: var(--c-text-muted);
+letter-spacing: .8px;
+margin-bottom: 6px;
+}
+.form-required { color: var(--c-danger); }
+.form-control {
+width: 100%;
+padding: 10px 14px;
+border: 1.5px solid var(--c-border);
+border-radius: var(--radius-sm);
+background: var(--c-surface);
+color: var(--c-text);
+font-family: var(--font-body);
+font-size: 13px;
+font-weight: 400;
+text-transform: uppercase;
+transition: border-color .2s, box-shadow .2s;
+outline: none;
+}
+.form-control:focus {
+border-color: var(--c-accent);
+box-shadow: 0 0 0 3px rgba(46,125,170,.12);
+}
+.form-control[type="email"] { text-transform: none; }
+.form-control[type="email"]::placeholder { text-transform: none; }
+.form-control.auto-field {
+background: var(--c-auto-bg);
+border-color: var(--c-auto-border);
+color: var(--c-accent);
+font-weight: 700;
+}
+.form-control[readonly] { cursor: default; }
+select.form-control {
+appearance: none;
+background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a7080' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+background-repeat: no-repeat;
+background-position: right 12px center;
+padding-right: 32px;
+}
+textarea.form-control { resize: vertical; min-height: 80px; }
+.form-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 16px;
+}
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+
+/* ============================================================
+STEP WIZARD
+============================================================ */
+.steps {
+display: flex;
+align-items: center;
+margin-bottom: 28px;
+padding: 20px 24px;
+background: var(--c-bg);
+border-radius: var(--radius-md);
+border: 1px solid var(--c-border);
+}
+.step-item {
+display: flex;
+align-items: center;
+flex: 1;
+}
+.step-item:last-child { flex: 0 0 auto; }
+.step-dot {
+width: 30px;
+height: 30px;
+border-radius: 50%;
+background: var(--c-border);
+color: var(--c-text-muted);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+font-weight: 700;
+flex-shrink: 0;
+transition: all .2s;
+}
+.step-dot.active {
+background: var(--c-primary);
+color: #fff;
+box-shadow: 0 0 0 4px var(--c-primary-light);
+}
+.step-dot.done {
+background: var(--c-success);
+color: #fff;
+}
+.step-meta {
+margin-left: 10px;
+}
+.step-meta .step-num {
+font-size: 10px;
+color: var(--c-text-light);
+line-height: 1;
+}
+.step-meta .step-name {
+font-size: 12px;
+font-weight: 700;
+color: var(--c-text-muted);
+letter-spacing: .3px;
+}
+.step-meta .step-name.active { color: var(--c-primary); }
+.step-line {
+flex: 1;
+height: 2px;
+background: var(--c-border);
+margin: 0 10px;
+transition: background .3s;
+}
+.step-line.done { background: var(--c-success); }
+
+/* ============================================================
+PRESCRIPTION TABLES
+============================================================ */
+.presc-table-wrap {
+overflow-x: auto;
+border-radius: var(--radius-sm);
+border: 1px solid var(--c-border);
+}
+.presc-table {
+width: 100%;
+border-collapse: collapse;
+min-width: 700px;
+}
+.presc-table thead tr {
+background: var(--c-primary);
+}
+.presc-table thead th {
+color: #fff;
+font-size: 11px;
+font-weight: 700;
+letter-spacing: .8px;
+padding: 10px 8px;
+text-align: center;
+border: 1px solid rgba(255,255,255,.1);
+white-space: nowrap;
+}
+.presc-table tbody tr:nth-child(even) { background: var(--c-bg); }
+.presc-table tbody td {
+padding: 6px 6px;
+border: 1px solid var(--c-border);
+text-align: center;
+vertical-align: middle;
+}
+.presc-table tbody td:first-child {
+font-weight: 700;
+font-size: 12px;
+color: var(--c-primary);
+padding: 8px 12px;
+white-space: nowrap;
+background: var(--c-primary-light);
+}
+.presc-table input {
+width: 100%;
+border: 1px solid var(--c-border);
+border-radius: 4px;
+padding: 5px 6px;
+text-align: center;
+font-size: 12px;
+font-family: var(--font-body);
+color: var(--c-text);
+background: var(--c-surface);
+outline: none;
+transition: border-color .15s;
+}
+.presc-table input:focus { border-color: var(--c-accent); }
+.presc-table input.auto-field {
+background: var(--c-auto-bg);
+border-color: var(--c-auto-border);
+color: var(--c-accent);
+font-weight: 700;
+}
+
+/* ============================================================
+PRESCRIPTION STEPS
+============================================================ */
+.prescription-step { display: none; }
+.prescription-step.active { display: block; animation: fadeUp .2s ease; }
+.step-section-title {
+font-size: 13px;
+font-weight: 700;
+color: var(--c-primary);
+letter-spacing: .8px;
+margin-bottom: 14px;
+display: flex;
+align-items: center;
+gap: 8px;
+border-bottom: 2px solid var(--c-primary-light);
+padding-bottom: 10px;
+}
+.step-section-title i { font-size: 14px; }
+
+/* ============================================================
+INFO ALERTS
+============================================================ */
+.alert {
+padding: 12px 16px;
+border-radius: var(--radius-sm);
+font-size: 12px;
+display: flex;
+align-items: flex-start;
+gap: 10px;
+margin-bottom: 16px;
+}
+.alert-info {
+background: #e8f4fd;
+border: 1px solid #bcd9ef;
+color: #1a5c7a;
+}
+.alert-warning {
+background: #fdf6e3;
+border: 1px solid #e8cc8a;
+color: #7a5c12;
+}
+.alert-success {
+background: #e6f4ec;
+border: 1px solid #8dcca9;
+color: #1a5c3a;
+}
+.alert i { margin-top: 1px; flex-shrink: 0; }
+
+/* ============================================================
+PATIENT LIST
+============================================================ */
+.patient-card {
+background: var(--c-surface);
+border: 1px solid var(--c-border);
+border-radius: var(--radius-md);
+padding: 16px 20px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+transition: box-shadow .2s, border-color .2s;
+margin-bottom: 10px;
+}
+.patient-card:hover {
+border-color: var(--c-accent);
+box-shadow: var(--shadow-sm);
+}
+.patient-avatar {
+width: 40px;
+height: 40px;
+background: var(--c-primary-light);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+color: var(--c-primary);
+font-size: 16px;
+flex-shrink: 0;
+}
+.patient-info {
+flex: 1;
+margin-left: 14px;
+}
+.patient-name {
+font-size: 13px;
+font-weight: 700;
+color: var(--c-text);
+}
+.patient-meta {
+font-size: 11px;
+color: var(--c-text-muted);
+margin-top: 2px;
+}
+.patient-actions {
+display: flex;
+gap: 8px;
+}
+.icon-btn {
+width: 32px;
+height: 32px;
+border: 1px solid var(--c-border);
+border-radius: var(--radius-sm);
+background: none;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+color: var(--c-text-muted);
+transition: all .2s;
+}
+.icon-btn:hover { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+.icon-btn.danger:hover { background: var(--c-danger); border-color: var(--c-danger); }
+
+/* ============================================================
+SEARCH
+============================================================ */
+.search-wrap {
+position: relative;
+}
+.search-wrap i {
+position: absolute;
+left: 12px;
+top: 50%;
+transform: translateY(-50%);
+color: var(--c-text-light);
+font-size: 13px;
+}
+.search-wrap input {
+padding-left: 36px;
+}
+
+/* ============================================================
+MODAL
+============================================================ */
+.modal-overlay {
+display: none;
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,.5);
+z-index: 500;
+align-items: center;
+justify-content: center;
+animation: fadeIn .2s ease;
+}
+.modal-overlay.show { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-box {
+background: var(--c-surface);
+border-radius: var(--radius-lg);
+box-shadow: var(--shadow-lg);
+animation: slideIn .25s ease;
+max-height: 92vh;
+overflow-y: auto;
+}
+@keyframes slideIn {
+from { opacity: 0; transform: translateY(-20px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+.modal-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 18px 24px;
+border-bottom: 1px solid var(--c-border);
+position: sticky;
+top: 0;
+background: var(--c-surface);
+z-index: 10;
+}
+.modal-header h3 {
+font-size: 14px;
+font-weight: 700;
+letter-spacing: .5px;
+}
+.modal-close {
+width: 28px;
+height: 28px;
+border-radius: 50%;
+border: none;
+background: var(--c-bg);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+color: var(--c-text-muted);
+transition: all .2s;
+}
+.modal-close:hover { background: var(--c-danger); color: #fff; }
+.modal-body { padding: 24px; }
+.modal-footer {
+padding: 16px 24px;
+border-top: 1px solid var(--c-border);
+display: flex;
+gap: 10px;
+justify-content: flex-end;
+}
+
+/* ============================================================
+LOGO UPLOAD ZONE
+============================================================ */
+.logo-upload-zone {
+width: 100%;
+aspect-ratio: 16/9;
+max-width: 320px;
+border: 2px dashed var(--c-border);
+border-radius: var(--radius-md);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+transition: all .2s;
+background: var(--c-bg);
+position: relative;
+overflow: hidden;
+}
+.logo-upload-zone:hover {
+border-color: var(--c-accent);
+background: var(--c-primary-light);
+}
+.logo-upload-zone img {
+position: absolute;
+inset: 0;
+width: 100%;
+height: 100%;
+object-fit: contain;
+padding: 8px;
+}
+.logo-upload-zone .upload-hint {
+text-align: center;
+}
+.logo-upload-zone .upload-hint i {
+font-size: 28px;
+color: var(--c-text-light);
+margin-bottom: 8px;
+}
+.logo-upload-zone .upload-hint p {
+font-size: 11px;
+color: var(--c-text-muted);
+line-height: 1.5;
+}
+
+/* ============================================================
+PRESCRIPTION PREVIEW (RECETA)
+============================================================ */
+.rx-preview-wrapper {
+background: var(--c-bg);
+border-radius: var(--radius-md);
+padding: 24px;
+margin-bottom: 20px;
+}
+.rx-doc {
+background: #fff;
+border: 1px solid #d0d7e0;
+border-radius: var(--radius-sm);
+position: relative;
+overflow: hidden;
+font-family: 'Lato', sans-serif;
+color: #1c2a38;
+}
+/* Marca de agua */
+.rx-doc::before {
+content: '';
+position: absolute;
+inset: 0;
+background-image: var(--watermark-url, none);
+background-repeat: no-repeat;
+background-position: center;
+background-size: 55%;
+opacity: .04;
+pointer-events: none;
+z-index: 0;
+}
+.rx-doc > * { position: relative; z-index: 1; }
+.rx-doc.format-A4 {
+padding: 32px 36px;
+min-height: 600px;
+font-size: 12px;
+}
+.rx-doc.format-A5 {
+padding: 22px 24px;
+min-height: 420px;
+font-size: 11px;
+}
+.rx-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+border-bottom: 2px solid var(--c-primary);
+padding-bottom: 14px;
+margin-bottom: 16px;
+}
+.rx-header-logo img {
+max-height: 56px;
+max-width: 160px;
+object-fit: contain;
+}
+.rx-header-logo .rx-icon {
+width: 48px;
+height: 48px;
+background: var(--c-primary-light);
+border-radius: var(--radius-sm);
+display: flex;
+align-items: center;
+justify-content: center;
+color: var(--c-primary);
+font-size: 22px;
+}
+.rx-clinic-info {
+text-align: right;
+}
+.rx-clinic-info .rx-clinic-name {
+font-size: 16px;
+font-weight: 900;
+color: var(--c-primary);
+margin-bottom: 2px;
+}
+.rx-clinic-info p {
+font-size: 11px;
+color: #5a7080;
+line-height: 1.5;
+}
+.rx-title-band {
+background: var(--c-primary);
+color: #fff;
+text-align: center;
+font-size: 13px;
+font-weight: 700;
+letter-spacing: 3px;
+padding: 7px;
+margin-bottom: 16px;
+border-radius: 4px;
+}
+.rx-patient-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 4px 20px;
+margin-bottom: 16px;
+padding: 12px;
+background: #f8fafc;
+border-radius: var(--radius-sm);
+border: 1px solid #e2eaf2;
+}
+.rx-patient-grid .rx-field {
+font-size: 11.5px;
+}
+.rx-field span { color: #5a7080; margin-right: 4px; }
+.rx-field strong { color: #1c2a38; }
+.rx-section-title {
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 1.5px;
+color: var(--c-primary);
+margin-bottom: 6px;
+padding-bottom: 4px;
+border-bottom: 1px solid var(--c-primary-light);
+}
+.rx-table {
+width: 100%;
+border-collapse: collapse;
+margin-bottom: 14px;
+font-size: 11.5px;
+}
+.rx-table th {
+background: var(--c-primary);
+color: #fff;
+padding: 7px 8px;
+text-align: center;
+font-size: 10px;
+font-weight: 700;
+letter-spacing: .8px;
+}
+.rx-table td {
+border: 1px solid #d8dfe8;
+padding: 6px 8px;
+text-align: center;
+}
+.rx-table tr:nth-child(even) td { background: #f4f6f9; }
+.rx-table td:first-child {
+font-weight: 700;
+background: var(--c-primary-light);
+color: var(--c-primary);
+}
+.rx-text-block {
+margin-bottom: 12px;
+padding: 10px 12px;
+background: #f8fafc;
+border-left: 3px solid var(--c-primary);
+border-radius: 0 4px 4px 0;
+font-size: 11.5px;
+}
+.rx-text-block h5 {
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 1px;
+color: var(--c-primary);
+margin-bottom: 4px;
+}
+.rx-footer {
+margin-top: 20px;
+border-top: 1px solid #d8dfe8;
+padding-top: 12px;
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 20px;
+}
+.rx-signature {
+text-align: center;
+}
+.rx-signature-line {
+border-bottom: 1px solid #1c2a38;
+margin-bottom: 4px;
+height: 40px;
+}
+.rx-signature p {
+font-size: 10px;
+color: #5a7080;
+}
+.rx-footer-info {
+font-size: 10px;
+color: #8da4b4;
+text-align: center;
+line-height: 1.5;
+grid-column: span 2;
+}
+
+/* ============================================================
+QUICK ACTIONS
+============================================================ */
+.quick-actions {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 12px;
+margin-bottom: 24px;
+}
+.quick-card {
+background: var(--c-surface);
+border: 1px solid var(--c-border);
+border-radius: var(--radius-md);
+padding: 18px;
+cursor: pointer;
+transition: all .2s;
+display: flex;
+align-items: center;
+gap: 14px;
+}
+.quick-card:hover {
+border-color: var(--c-primary);
+box-shadow: var(--shadow-md);
+transform: translateY(-2px);
+}
+.quick-card .qc-icon {
+width: 44px;
+height: 44px;
+border-radius: var(--radius-sm);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 20px;
+flex-shrink: 0;
+}
+.quick-card .qc-text h4 {
+font-size: 13px;
+font-weight: 700;
+margin-bottom: 2px;
+}
+.quick-card .qc-text p {
+font-size: 11px;
+color: var(--c-text-muted);
+text-transform: none;
+}
+
+/* ============================================================
+EXPORT FORMAT SELECTOR
+============================================================ */
+.format-selector {
+display: flex;
+gap: 10px;
+margin-bottom: 16px;
+}
+.format-option {
+flex: 1;
+border: 2px solid var(--c-border);
+border-radius: var(--radius-sm);
+padding: 12px;
+cursor: pointer;
+text-align: center;
+transition: all .2s;
+}
+.format-option.selected {
+border-color: var(--c-primary);
+background: var(--c-primary-light);
+}
+.format-option .format-label {
+font-weight: 700;
+font-size: 14px;
+}
+.format-option .format-desc {
+font-size: 10px;
+color: var(--c-text-muted);
+margin-top: 2px;
+}
+
+/* ============================================================
+SECTION DIVIDER
+============================================================ */
+.section-divider {
+height: 1px;
+background: var(--c-border);
+margin: 24px 0;
+}
+
+/* ============================================================
+BACKUP INDICATOR
+============================================================ */
+.backup-toast {
+position: fixed;
+bottom: 24px;
+right: 24px;
+background: var(--c-surface);
+border: 1px solid var(--c-border);
+border-left: 4px solid var(--c-success);
+border-radius: var(--radius-md);
+padding: 14px 18px;
+box-shadow: var(--shadow-md);
+display: flex;
+align-items: center;
+gap: 12px;
+z-index: 999;
+animation: slideInRight .3s ease;
+display: none;
+}
+@keyframes slideInRight {
+from { opacity: 0; transform: translateX(80px); }
+to   { opacity: 1; transform: translateX(0); }
+}
+.backup-toast.show { display: flex; }
+
+/* ============================================================
+RESPONSIVE
+============================================================ */
+@media (max-width: 1024px) {
+.stats-grid { grid-template-columns: repeat(2, 1fr); }
+.form-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+.sidebar { transform: translateX(-100%); }
+.sidebar.open { transform: translateX(0); }
+.main-wrapper { margin-left: 0; }
+.hamburger { display: block; }
+.content { padding: 16px; }
+.topbar { padding: 0 16px; }
+.stats-grid { grid-template-columns: repeat(2, 1fr); }
+.form-grid { grid-template-columns: 1fr; }
+.quick-actions { grid-template-columns: 1fr; }
+.col-span-2, .col-span-3 { grid-column: span 1; }
+}
+
+/* ============================================================
+PRINT STYLES
+============================================================ */
+@media print {
+.no-print { display: none !important; }
+.sidebar { display: none !important; }
+.main-wrapper { margin-left: 0 !important; }
+.topbar { display: none !important; }
+.content { padding: 0 !important; }
+.rx-doc {
+border: none;
+box-shadow: none;
+border-radius: 0;
+}
+/* A4 */
+.rx-doc.format-A4 {
+width: 210mm;
+min-height: 297mm;
+padding: 20mm 22mm;
+font-size: 11pt;
+page-break-after: always;
+}
+/* A5 */
+.rx-doc.format-A5 {
+width: 148mm;
+min-height: 210mm;
+padding: 15mm 16mm;
+font-size: 9.5pt;
+page-break-after: always;
+}
+@page { margin: 0; }
+}
+</style>
+</head>
+<body>
+<!-- ============================================================
+SIDEBAR
+============================================================ -->
+<aside class="sidebar" id="sidebar">
+<!-- Logo -->
+<div class="sidebar-logo" onclick="openLogoUpload()">
+<div id="sidebarLogoContainer">
+<!-- Logo se inserta aquí via JS -->
+<div class="sidebar-logo-placeholder">
+<div class="sidebar-logo-icon">
+<!-- SVG ojo médico -->
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="32" cy="32" rx="28" ry="16" stroke="white" stroke-width="3"/>
+<circle cx="32" cy="32" r="9" fill="white" opacity=".9"/>
+<circle cx="29" cy="29" r="3" fill="rgba(26,61,92,.6)"/>
+</svg>
+</div>
+<div class="sidebar-logo-text">
+<h1>Sistema Recetas</h1>
+<p>Oftalmológicas v5.0</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="sidebar-nav">
+<div class="nav-label">MENÚ PRINCIPAL</div>
+<a class="nav-item active" data-section="dashboard" onclick="navigateTo('dashboard', this)">
+<i class="fas fa-chart-line"></i> INICIO
+</a>
+<a class="nav-item" data-section="new-prescription" onclick="navigateTo('new-prescription', this)">
+<i class="fas fa-file-medical"></i> NUEVA RECETA
+</a>
+<a class="nav-item" data-section="patients" onclick="navigateTo('patients', this)">
+<i class="fas fa-users"></i> PACIENTES
+</a>
+<div class="nav-label" style="margin-top:12px;">SISTEMA</div>
+<a class="nav-item" data-section="settings" onclick="navigateTo('settings', this)">
+<i class="fas fa-sliders-h"></i> CONFIGURACIÓN
+</a>
+</nav>
+<!-- Footer -->
+<div class="sidebar-footer">
+<div class="backup-chip">
+<i class="fas fa-shield-alt"></i>
+<span>BACKUP: <strong id="sidebarBackupDate">NUNCA</strong></span>
+</div>
+</div>
+</aside>
+<!-- ============================================================
+MAIN WRAPPER
+============================================================ -->
+<div class="main-wrapper">
+<!-- TOP BAR -->
+<header class="topbar no-print">
+<div style="display:flex;align-items:center;gap:14px;">
+<button class="hamburger" onclick="toggleSidebar()">
+<i class="fas fa-bars"></i>
+</button>
+<span class="topbar-title" id="topbarTitle">PANEL PRINCIPAL</span>
+</div>
+<div class="topbar-actions">
+<!-- Selector de tema -->
+<button class="theme-btn" data-theme="default" onclick="setTheme('default')" title="Azul médico"></button>
+<button class="theme-btn" data-theme="green"   onclick="setTheme('green')"   title="Verde clínico"></button>
+<button class="theme-btn" data-theme="slate"   onclick="setTheme('slate')"   title="Gris neutro"></button>
+<button class="theme-btn" data-theme="dark"    onclick="setTheme('dark')"    title="Oscuro"></button>
+<button class="theme-btn" data-theme="pink"    onclick="setTheme('pink')"    title="Rosado"></button>
+<button class="btn btn-accent btn-sm" onclick="navigateTo('new-prescription', null)">
+<i class="fas fa-plus"></i> NUEVA RECETA
+</button>
+</div>
+</header>
+<!-- CONTENT -->
+<main class="content">
+<!-- ======================================================
+DASHBOARD
+====================================================== -->
+<section id="dashboard" class="section active">
+<!-- Hero -->
+<div class="hero">
+<div>
+<h2>Bienvenido al Sistema</h2>
+<p>Gestión profesional de recetas oftalmológicas</p>
+</div>
+</div>
+<!-- Stats -->
+<div class="stats-grid">
+<div class="stat-card">
+<div class="icon" style="background:var(--c-primary-light);color:var(--c-primary);">
+<i class="fas fa-users"></i>
+</div>
+<div class="value" style="color:var(--c-primary);" id="statPatients">0</div>
+<div class="label">PACIENTES REGISTRADOS</div>
+</div>
+<div class="stat-card">
+<div class="icon" style="background:#e0f0fb;color:var(--c-accent);">
+<i class="fas fa-file-medical"></i>
+</div>
+<div class="value" style="color:var(--c-accent);" id="statPrescriptions">0</div>
+<div class="label">RECETAS ESTE MES</div>
+</div>
+<div class="stat-card">
+<div class="icon" style="background:#fff8e6;color:#b8780e;">
+<i class="fas fa-calendar-check"></i>
+</div>
+<div class="value" style="color:#b8780e;" id="statAppointments">0</div>
+<div class="label">CITAS PRÓXIMAS (30 DÍAS)</div>
+</div>
+<div class="stat-card">
+<div class="icon" style="background:#f0eaff;color:#6b3fa0;">
+<i class="fas fa-database"></i>
+</div>
+<div class="value" style="color:#6b3fa0;" id="statBackup">0</div>
+<div class="label">BACKUPS EXPORTADOS</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="quick-actions">
+<div class="quick-card" onclick="navigateTo('new-prescription', null)">
+<div class="qc-icon" style="background:var(--c-primary-light);color:var(--c-primary);">
+<i class="fas fa-plus-circle"></i>
+</div>
+<div class="qc-text">
+<h4>NUEVA RECETA</h4>
+<p>Crear receta para paciente</p>
+</div>
+</div>
+<div class="quick-card" onclick="navigateTo('patients', null)">
+<div class="qc-icon" style="background:#e0f0fb;color:var(--c-accent);">
+<i class="fas fa-search"></i>
+</div>
+<div class="qc-text">
+<h4>VER PACIENTES</h4>
+<p>Historial y recetas guardadas</p>
+</div>
+</div>
+<div class="quick-card" onclick="exportBackup()">
+<div class="qc-icon" style="background:#f0eaff;color:#6b3fa0;">
+<i class="fas fa-download"></i>
+</div>
+<div class="qc-text">
+<h4>EXPORTAR BACKUP</h4>
+<p>Guardar copia de seguridad</p>
+</div>
+</div>
+</div>
+<!-- Recent -->
+<div class="card">
+<div class="card-header">
+<h3><i class="fas fa-history"></i> ÚLTIMAS RECETAS</h3>
+<button class="btn btn-ghost btn-sm" onclick="navigateTo('patients', null)">
+VER TODAS <i class="fas fa-arrow-right" style="margin-left:4px;"></i>
+</button>
+</div>
+<div class="card-body">
+<div id="recentPrescriptionsList">
+<div style="text-align:center;padding:32px;color:var(--c-text-light);">
+<i class="fas fa-file-medical" style="font-size:36px;margin-bottom:12px;display:block;"></i>
+<p style="font-size:13px;">AÚN NO HAY RECETAS. ¡CREA LA PRIMERA!</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================================================
+NUEVA RECETA
+====================================================== -->
+<section id="new-prescription" class="section">
+<!-- Step indicator -->
+<div class="steps">
+<div class="step-item">
+<div class="step-dot active" id="sdot1">1</div>
+<div class="step-meta">
+<div class="step-num">PASO 1</div>
+<div class="step-name active" id="sname1">PACIENTE</div>
+</div>
+</div>
+<div class="step-line" id="sline1"></div>
+<div class="step-item">
+<div class="step-dot" id="sdot2">2</div>
+<div class="step-meta">
+<div class="step-num">PASO 2</div>
+<div class="step-name" id="sname2">REFRACCIÓN</div>
+</div>
+</div>
+<div class="step-line" id="sline2"></div>
+<div class="step-item">
+<div class="step-dot" id="sdot3">3</div>
+<div class="step-meta">
+<div class="step-num">PASO 3</div>
+<div class="step-name" id="sname3">DIAGNÓSTICO</div>
+</div>
+</div>
+<div class="step-line" id="sline3"></div>
+<div class="step-item">
+<div class="step-dot" id="sdot4">4</div>
+<div class="step-meta">
+<div class="step-num">PASO 4</div>
+<div class="step-name" id="sname4">PRODUCTO</div>
+</div>
+</div>
+<div class="step-line" id="sline4"></div>
+<div class="step-item" style="flex:0 0 auto;">
+<div class="step-dot" id="sdot5">5</div>
+<div class="step-meta">
+<div class="step-num">PASO 5</div>
+<div class="step-name" id="sname5">VISTA PREVIA</div>
+</div>
+</div>
+</div>
+<!-- STEP 1: Paciente -->
+<div id="step1" class="prescription-step active">
+<div class="card">
+<div class="card-header">
+<h3><i class="fas fa-user"></i> INFORMACIÓN DEL PACIENTE</h3>
+</div>
+<div class="card-body">
+<div class="alert alert-info">
+<i class="fas fa-info-circle"></i>
+<span>COMPLETE LOS DATOS DEL PACIENTE. LOS CAMPOS CON <span style="color:var(--c-danger);font-weight:700;">*</span> SON OBLIGATORIOS.</span>
+</div>
+<div class="form-grid">
+<div class="form-group col-span-2">
+<label class="form-label">NOMBRE COMPLETO <span class="form-required">*</span></label>
+<input type="text" id="patientName" class="form-control" placeholder="APELLIDOS Y NOMBRES">
+</div>
+<div class="form-group">
+<label class="form-label">DNI / CÓDIGO</label>
+<input type="text" id="patientDNI" class="form-control" placeholder="DOCUMENTO DE IDENTIDAD">
+</div>
+<div class="form-group">
+<label class="form-label">N° HISTORIA CLÍNICA</label>
+<input type="text" id="patientHistory" class="form-control" placeholder="NÚM. DE HISTORIA">
+</div>
+<div class="form-group">
+<label class="form-label">SEXO</label>
+<select id="patientSex" class="form-control">
+<option value="">SELECCIONAR</option>
+<option value="M">MASCULINO</option>
+<option value="F">FEMENINO</option>
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">FECHA DE NACIMIENTO</label>
+<input type="date" id="patientBirthDate" class="form-control">
+</div>
+<div class="form-group">
+<label class="form-label">EDAD (AUTO)</label>
+<input type="number" id="patientAge" class="form-control auto-field" placeholder="AÑOS" readonly>
+</div>
+<div class="form-group">
+<label class="form-label">TELÉFONO</label>
+<input type="tel" id="patientPhone" class="form-control" placeholder="NÚM. DE CONTACTO">
+</div>
+<!-- Campo email del cliente -->
+<div class="form-group col-span-2">
+<label class="form-label">CORREO ELECTRÓNICO DEL PACIENTE</label>
+<input type="email" id="patientEmail" class="form-control" placeholder="correo@ejemplo.com">
+</div>
+<div class="form-group">
+<label class="form-label">FECHA DE ATENCIÓN</label>
+<input type="date" id="appointmentDate" class="form-control">
+</div>
+<div class="form-group">
+<label class="form-label">PRÓXIMA VISITA</label>
+<input type="date" id="nextVisit" class="form-control">
+</div>
+<div class="form-group">
+<label class="form-label">OPTÓMETRA / MÉDICO</label>
+<input type="text" id="doctorName" class="form-control" placeholder="NOMBRE DEL PROFESIONAL">
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:8px;">
+<button class="btn btn-ghost" onclick="clearPatientData()">
+<i class="fas fa-eraser"></i> LIMPIAR FORMULARIO
+</button>
+<button class="btn btn-primary" onclick="nextStep(2)">
+SIGUIENTE <i class="fas fa-arrow-right"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- STEP 2: Refracción -->
+<div id="step2" class="prescription-step">
+<div class="card">
+<div class="card-header">
+<h3><i class="fas fa-glasses"></i> REFRACCIÓN OCULAR</h3>
+</div>
+<div class="card-body">
+<div class="alert alert-info" style="margin-bottom:20px;">
+<i class="fas fa-calculator"></i>
+<span>CAMPOS EN <strong style="color:var(--c-accent);">AZUL</strong> SE CALCULAN AUTOMÁTICAMENTE: <strong>EE</strong> = ESFERA + (CILINDRO/2) | <strong>ESFERA CERCA</strong> = ESFERA LEJOS + ADICIÓN</span>
+</div>
+<!-- Lejos -->
+<div class="step-section-title">
+<i class="fas fa-binoculars"></i> VISIÓN DE LEJOS — CORRECCIÓN
+</div>
+<div class="presc-table-wrap" style="margin-bottom:16px;">
+<table class="presc-table">
+<thead>
+<tr>
+<th>OJO</th>
+<th>ESFERA</th>
+<th>CILINDRO</th>
+<th>EJE °</th>
+<th>ADICIÓN</th>
+<th>EE (AUTO)</th>
+<th>PRISMA</th>
+<th>BASE</th>
+<th>A.V.</th>
+<th>D.I.P.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>O.D.</td>
+<td><input type="number" step="0.25" class="sphere-od-lejos" onchange="calculateEE('od','lejos');calculateNearSphere()"></td>
+<td><input type="number" step="0.25" class="cylinder-od-lejos" onchange="calculateEE('od','lejos')"></td>
+<td><input type="number" class="axis-od-lejos"></td>
+<td><input type="number" step="0.25" class="add-od-lejos" onchange="calculateNearSphere()"></td>
+<td><input type="number" step="0.25" class="ee-od-lejos auto-field" readonly></td>
+<td><input type="number" step="0.5" class="prism-od-lejos"></td>
+<td><input type="text" class="base-od-lejos"></td>
+<td><input type="text" class="av-od-lejos"></td>
+<td><input type="number" class="dip-od-lejos"></td>
+</tr>
+<tr>
+<td>O.I.</td>
+<td><input type="number" step="0.25" class="sphere-oi-lejos" onchange="calculateEE('oi','lejos');calculateNearSphere()"></td>
+<td><input type="number" step="0.25" class="cylinder-oi-lejos" onchange="calculateEE('oi','lejos')"></td>
+<td><input type="number" class="axis-oi-lejos"></td>
+<td><input type="number" step="0.25" class="add-oi-lejos" onchange="calculateNearSphere()"></td>
+<td><input type="number" step="0.25" class="ee-oi-lejos auto-field" readonly></td>
+<td><input type="number" step="0.5" class="prism-oi-lejos"></td>
+<td><input type="text" class="base-oi-lejos"></td>
+<td><input type="text" class="av-oi-lejos"></td>
+<td><input type="number" class="dip-oi-lejos"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="form-grid" style="margin-bottom:20px;">
+<div class="form-group">
+<label class="form-label">N.P.L. O.D.</label>
+<input type="text" id="nplOd" class="form-control">
+</div>
+<div class="form-group">
+<label class="form-label">N.P.L. O.I.</label>
+<input type="text" id="nplOi" class="form-control">
+</div>
+<div class="form-group">
+<label class="form-label">D.I.P. TOTAL</label>
+<input type="number" id="dipTotal" class="form-control">
+</div>
+</div>
+<!-- Cerca -->
+<div class="step-section-title">
+<i class="fas fa-book-reader"></i> VISIÓN DE CERCA — CORRECCIÓN
+</div>
+<div class="presc-table-wrap" style="margin-bottom:16px;">
+<table class="presc-table">
+<thead>
+<tr>
+<th>OJO</th>
+<th>ESFERA (AUTO)</th>
+<th>CILINDRO</th>
+<th>EJE °</th>
+<th>ADICIÓN</th>
+<th>EE (AUTO)</th>
+<th>PRISMA</th>
+<th>BASE</th>
+<th>A.V.</th>
+<th>D.I.P.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>O.D.</td>
+<td><input type="number" step="0.25" class="sphere-od-cerca auto-field" readonly></td>
+<td><input type="number" step="0.25" class="cylinder-od-cerca"></td>
+<td><input type="number" class="axis-od-cerca"></td>
+<td><input type="number" step="0.25" class="add-od-cerca"></td>
+<td><input type="number" step="0.25" class="ee-od-cerca auto-field" readonly></td>
+<td><input type="number" step="0.5" class="prism-od-cerca"></td>
+<td><input type="text" class="base-od-cerca"></td>
+<td><input type="text" class="av-od-cerca"></td>
+<td><input type="number" class="dip-od-cerca"></td>
+</tr>
+<tr>
+<td>O.I.</td>
+<td><input type="number" step="0.25" class="sphere-oi-cerca auto-field" readonly></td>
+<td><input type="number" step="0.25" class="cylinder-oi-cerca"></td>
+<td><input type="number" class="axis-oi-cerca"></td>
+<td><input type="number" step="0.25" class="add-oi-cerca"></td>
+<td><input type="number" step="0.25" class="ee-oi-cerca auto-field" readonly></td>
+<td><input type="number" step="0.5" class="prism-oi-cerca"></td>
+<td><input type="text" class="base-oi-cerca"></td>
+<td><input type="text" class="av-oi-cerca"></td>
+<td><input type="number" class="dip-oi-cerca"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="form-grid" style="margin-bottom:20px;">
+<div class="form-group">
+<label class="form-label">N.P.C. O.D.</label>
+<input type="text" id="npcOd" class="form-control">
+</div>
+<div class="form-group">
+<label class="form-label">N.P.C. O.I.</label>
+<input type="text" id="npcOi" class="form-control">
+</div>
+<div class="form-group">
+<label class="form-label">ADICIÓN INTERMEDIA</label>
+<input type="number" step="0.25" id="addIntermediate" class="form-control">
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;">
+<button class="btn btn-ghost" onclick="previousStep(1)">
+<i class="fas fa-arrow-left"></i> ATRÁS
+</button>
+<button class="btn btn-primary" onclick="nextStep(3)">
+SIGUIENTE <i class="fas fa-arrow-right"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- STEP 3: Diagnóstico -->
+<div id="step3" class="prescription-step">
+<div class="card">
+<div class="card-header">
+<h3><i class="fas fa-stethoscope"></i> DIAGNÓSTICO Y OBSERVACIONES</h3>
+</div>
+<div class="card-body">
+<div class="form-grid">
+<div class="form-group col-span-2">
+<label class="form-label">DIAGNÓSTICO</label>
+<textarea id="diagnosis" class="form-control" rows="3" placeholder="DIAGNÓSTICO CLÍNICO"></textarea>
+</div>
+<div class="form-group">
+<label class="form-label">TRATAMIENTO INDICADO</label>
+<textarea id="treatment" class="form-control" rows="3" placeholder="TRATAMIENTO RECOMENDADO"></textarea>
+</div>
+<div class="form-group">
+<label class="form-label">TIPO DE LENTE</label>
+<select id="lensType" class="form-control">
+<option value="">SELECCIONAR</option>
+<option>MONOFOCAL</option>
+<option>BIFOCAL</option>
+<option>PROGRESIVO</option>
+<option>OCUPACIONAL</option>
+<option>ANTI-REFLEJO</option>
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">CAPACIDAD VISUAL O.D.</label>
+<input type="text" id="visualCapacityOD" class="form-control" placeholder="EJ: 20/20">
+</div>
+<div class="form-group">
+<label class="form-label">CAPACIDAD VISUAL O.I.</label>
+<input type="text" id="visualCapacityOI" class="form-control" placeholder="EJ: 20/20">
+</div>
+<div class="form-group">
+<label class="form-label">OBSERVACIONES O.D.</label>
+<textarea id="observationsOD" class="form-control" rows="2" placeholder="OBSERVACIONES OJO DERECHO"></textarea>
+</div>
+<div class="form-group">
+<label class="form-label">OBSERVACIONES O.I.</label>
+<textarea id="observationsOI" class="form-control" rows="2" placeholder="OBSERVACIONES OJO IZQUIERDO"></textarea>
+</div>
+<div class="form-group col-span-3">
+<label class="form-label">RECOMENDACIONES AL PACIENTE</label>
+<textarea id="recommendations" class="form-control" rows="3" placeholder="RECOMENDACIONES Y CUIDADOS"></textarea>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:8px;">
+<button class="btn btn-ghost" onclick="previousStep(2)">
+<i class="fas fa-arrow-left"></i> ATRÁS
+</button>
+<button class="btn btn-primary" onclick="nextStep(4)">
+SIGUIENTE <i class="fas fa-arrow-right"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- STEP 4: Producto -->
+<div id="step4" class="prescription-step">
+<div class="card">
+<div class="card-header">
+<h3><i class="fas fa-shopping-cart"></i> PRODUCTO ADQUIRIDO</h3>
+</div>
+<div class="card-body">
+<div class="alert alert-warning" style="margin-bottom:20px;">
+<i class="fas fa-info-circle"></i>
+<span>COMPLETE ESTA SECCIÓN SOLO SI EL PACIENTE REALIZÓ UNA COMPRA EN EL CONSULTORIO.</span>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label class="form-label">MONTURA — MARCA</label>
+<input type="text" id="frameBrand" class="form-control" placeholder="MARCA DE LA MONTURA">
+</div>
+<div class="form-group">
+<label class="form-label">MONTURA — CÓDIGO</label>
+<input type="text" id="frameCode" class="form-control" placeholder="CÓDIGO DEL PRODUCTO">
+</div>
+<div class="form-group">
+<label class="form-label">GARANTÍA MONTURA</label>
+<input type="text" id="frameWarranty" class="form-control" placeholder="PERÍODO DE GARANTÍA">
+</div>
+<div class="form-group">
+<label class="form-label">N° BOLETA / FACTURA</label>
+<input type="text" id="invoiceNumber" class="form-control" placeholder="NÚMERO DE COMPROBANTE">
+</div>
+<div class="form-group">
+<label class="form-label">TIPO DE LUNA</label>
+<select id="lensTypeProduct" class="form-control">
+<option value="">SELECCIONAR</option>
+<option>MONOFOCAL</option>
+<option>BIFOCAL</option>
+<option>PROGRESIVO</option>
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">MATERIAL DE LUNA</label>
+<input type="text" id="lensMaterial" class="form-control" placeholder="EJ: POLICARBONATO, CR-39">
+</div>
+<div class="form-group">
+<label class="form-label">TRATAMIENTO</label>
+<input type="text" id="lensTreatment" class="form-control" placeholder="EJ: ANTI-REFLEJO, UV">
+</div>
+<div class="form-group">
+<label class="form-label">GARANTÍA LUNAS</label>
+<input type="text" id="lensWarranty" class="form-control" placeholder="PERÍODO DE GARANTÍA">
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:8px;">
+<button class="btn btn-ghost" onclick="previousStep(3)">
+<i class="fas fa-arrow-left"></i> ATRÁS
+</button>
+<button class="btn btn-primary" onclick="nextStep(5)">
+VISTA PREVIA <i class="fas fa-eye"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- STEP 5: Vista Previa -->
+<div id="step5" class="prescription-step">
+<div class="card" style="margin-bottom:16px;">
+<div class="card-header">
+<h3><i class="fas fa-file-alt"></i> VISTA PREVIA DE RECETA</h3>
+<div style="display:flex;align-items:center;gap:10px;">
+<!-- Selector A4/A5 -->
+<div class="format-selector" style="margin-bottom:0;">
+<div class="format-option selected" data-fmt="A4" onclick="selectFormat('A4', this)">
+<div class="format-label">A4</div>
+<div class="format-desc">210×297 MM</div>
+</div>
+<div class="format-option" data-fmt="A5" onclick="selectFormat('A5', this)">
+<div class="format-label">A5</div>
+<div class="format-desc">148×210 MM</div>
+</div>
+</div>
+<button class="btn btn-accent btn-sm" onclick="printPrescription()">
+<i class="fas fa-print"></i> IMPRIMIR
+</button>
+<button class="btn btn-danger btn-sm" onclick="exportPDF()">
+<i class="fas fa-file-pdf"></i> EXPORTAR PDF
+</button>
+</div>
+</div>
+<div class="card-body">
+<!-- Preview document -->
+<div class="rx-preview-wrapper">
+<div id="prescriptionPreview" class="rx-doc format-A4">
+<!-- Generated by JS -->
+</div>
+</div>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+<button class="btn btn-ghost" onclick="previousStep(4)">
+<i class="fas fa-arrow-left"></i> ATRÁS
+</button>
+<div style="display:flex;gap:10px;">
+<button class="btn btn-success" onclick="savePrescription()">
+<i class="fas fa-save"></i> GUARDAR PACIENTE
+</button>
+<button class="btn btn-ghost" onclick="navigateTo('dashboard', null);resetForm();">
+<i class="fas fa-home"></i> INICIO
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================================================
+PACIENTES
+====================================================== -->
+<section id="patients" class="section">
+<div class="card">
+<div class="card-header">
+<h3><i class="fas fa-users"></i> PACIENTES REGISTRADOS</h3>
+<div style="display:flex;gap:10px;align-items:center;">
+<div class="search-wrap">
+<i class="fas fa-search"></i>
+<input type="text" id="patientSearch" class="form-control" style="width:220px;" placeholder="BUSCAR PACIENTE..." onkeyup="searchPatients()">
+</div>
+<button class="btn btn-primary btn-sm" onclick="navigateTo('new-prescription', null)">
+<i class="fas fa-plus"></i> NUEVA RECETA
+</button>
+<button class="btn btn-ghost btn-sm" onclick="exportBackup()">
+<i class="fas fa-download"></i> BACKUP
+</button>
+</div>
+</div>
+<div class="card-body">
+<div id="patientsList">
+<div style="text-align:center;padding:48px;color:var(--c-text-light);">
+<i class="fas fa-user-plus" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+<p style="font-size:13px;margin-bottom:16px;">AÚN NO HAY PACIENTES REGISTRADOS</p>
+<button class="btn btn-primary btn-sm" onclick="navigateTo('new-prescription', null)">
+<i class="fas fa-plus"></i> CREAR PRIMERA RECETA
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================================================
+CONFIGURACIÓN
+====================================================== -->
+<section id="settings" class="section">
+<!-- Logo & Identidad -->
+<div class="card" style="margin-bottom:20px;">
+<div class="card-header">
+<h3><i class="fas fa-image"></i> LOGO E IDENTIDAD VISUAL</h3>
+</div>
+<div class="card-body">
+<div style="display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap;">
+<div>
+<p class="form-label" style="margin-bottom:10px;">LOGO DEL CONSULTORIO (SOPORTE 16:9 SVG/PNG)</p>
+<div class="logo-upload-zone" id="logoUploadZone" onclick="document.getElementById('logoUpload').click()" style="width:280px;">
+<div class="upload-hint" id="logoUploadHint">
+<i class="fas fa-cloud-upload-alt"></i>
+<p>HAGA CLIC PARA SUBIR LOGO<br><span style="font-size:10px;color:var(--c-text-light);">PNG, JPG, SVG — MÁX 2MB — RECOMENDADO 16:9</span></p>
+</div>
+</div>
+<input type="file" id="logoUpload" accept="image/*,.svg" class="no-print" style="display:none;" onchange="uploadLogo(event)">
+<button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="removeLogo()">
+<i class="fas fa-trash"></i> QUITAR LOGO
+</button>
+</div>
+<div style="flex:1;min-width:200px;">
+<div class="alert alert-info">
+<i class="fas fa-lightbulb"></i>
+<div>
+<strong>RECOMENDACIONES:</strong><br>
+• FORMATO SVG O PNG CON FONDO TRANSPARENTE<br>
+• PROPORCIÓN 16:9 PARA MEJOR VISUALIZACIÓN<br>
+• EL LOGO APARECERÁ COMO MARCA DE AGUA EN LA RECETA AL 4% DE OPACIDAD
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Información del consultorio -->
+<div class="card" style="margin-bottom:20px;">
+<div class="card-header">
+<h3><i class="fas fa-clinic-medical"></i> DATOS DEL CONSULTORIO</h3>
+</div>
+<div class="card-body">
+<div class="form-grid">
+<div class="form-group col-span-2">
+<label class="form-label">NOMBRE DEL CONSULTORIO / CLÍNICA</label>
+<input type="text" id="clinicName" class="form-control" placeholder="NOMBRE COMERCIAL">
+</div>
+<div class="form-group">
+<label class="form-label">RUC</label>
+<input type="text" id="clinicRUC" class="form-control" placeholder="NÚMERO DE RUC">
+</div>
+<div class="form-group">
+<label class="form-label">TELÉFONO DE CONTACTO</label>
+<input type="tel" id="clinicPhone" class="form-control" placeholder="TELÉFONO">
+</div>
+<div class="form-group">
+<label class="form-label">CORREO ELECTRÓNICO</label>
+<input type="email" id="clinicEmail" class="form-control" placeholder="correo@consultorio.com">
+</div>
+<div class="form-group col-span-3">
+<label class="form-label">DIRECCIÓN COMPLETA</label>
+<input type="text" id="clinicAddress" class="form-control" placeholder="DIRECCIÓN COMPLETA DEL CONSULTORIO">
+</div>
+</div>
+</div>
+</div>
+<!-- Datos del médico -->
+<div class="card" style="margin-bottom:20px;">
+<div class="card-header">
+<h3><i class="fas fa-user-md"></i> DATOS DEL PROFESIONAL</h3>
+</div>
+<div class="card-body">
+<div class="form-grid">
+<div class="form-group col-span-2">
+<label class="form-label">MÉDICO / OPTÓMETRA RESPONSABLE</label>
+<input type="text" id="doctorNameConfig" class="form-control" placeholder="NOMBRE COMPLETO DEL PROFESIONAL">
+</div>
+<div class="form-group">
+<label class="form-label">N° COLEGIATURA (COP/CMP)</label>
+<input type="text" id="doctorLicense" class="form-control" placeholder="NÚM. DE COLEGIATURA">
+</div>
+<div class="form-group">
+<label class="form-label">ESPECIALIDAD / TÍTULO</label>
+<input type="text" id="doctorSpecialty" class="form-control" placeholder="ESPECIALIDAD">
+</div>
+<div class="form-group col-span-3">
+<label class="form-label">PIE DE PÁGINA DE DOCUMENTOS</label>
+<textarea id="footerText" class="form-control" rows="2" placeholder="TEXTO QUE APARECERÁ AL PIE DE LAS RECETAS"></textarea>
+</div>
+</div>
+</div>
+</div>
+<!-- Backup -->
+<div class="card" style="margin-bottom:20px;">
+<div class="card-header">
+<h3><i class="fas fa-database"></i> GESTIÓN DE BACKUP</h3>
+</div>
+<div class="card-body">
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+<button class="btn btn-primary" onclick="exportBackup()">
+<i class="fas fa-download"></i> EXPORTAR BACKUP JSON
+</button>
+<button class="btn btn-accent" onclick="document.getElementById('importBackup').click()">
+<i class="fas fa-upload"></i> IMPORTAR BACKUP
+</button>
+<input type="file" id="importBackup" accept=".json" style="display:none;" onchange="importBackup(event)">
+</div>
+<div class="alert alert-warning" style="margin-bottom:16px;">
+<i class="fas fa-exclamation-triangle"></i>
+<span>LOS DATOS SE SINCRONIZAN EN LA NUBE (SUPABASE). EXPORTE BACKUPS REGULARMENTE COMO RESPALDO LOCAL.</span>
+</div>
+<!-- ===== BACKUP LIST ===== -->
+<div id="backupListContainer" style="margin-top:8px;">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+<span style="font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--c-text-muted);">BACKUPS GUARDADOS</span>
+<span id="backupCount" style="font-size:11px;color:var(--c-text-light);">0 BACKUPS</span>
+</div>
+<div id="backupList" style="display:flex;flex-direction:column;gap:8px;">
+<div style="text-align:center;padding:20px;color:var(--c-text-light);font-size:12px;">
+<i class="fas fa-archive" style="display:block;font-size:24px;margin-bottom:8px;opacity:.4;"></i>
+AÚN NO HAY BACKUPS. EXPORTE UNO PARA EMPEZAR.
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Zona peligrosa -->
+<div class="card" style="border-color:#f5c6cb;">
+<div class="card-header" style="background:#fff5f5;">
+<h3 style="color:var(--c-danger);"><i class="fas fa-exclamation-triangle"></i> ZONA DE PELIGRO</h3>
+</div>
+<div class="card-body">
+<p style="font-size:12px;color:var(--c-danger);margin-bottom:14px;">ESTAS ACCIONES SON IRREVERSIBLES. ASEGÚRESE DE TENER UN BACKUP ANTES DE CONTINUAR.</p>
+<button class="btn btn-danger btn-sm" onclick="confirmClearAllData()">
+<i class="fas fa-trash"></i> ELIMINAR TODOS LOS DATOS
+</button>
+</div>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+<button class="btn btn-ghost" onclick="loadSettings()">
+<i class="fas fa-undo"></i> RECARGAR
+</button>
+<button class="btn btn-primary" onclick="saveSettings()">
+<i class="fas fa-save"></i> GUARDAR CONFIGURACIÓN
+</button>
+</div>
+</section>
+</main>
+</div><!-- /main-wrapper -->
+<!-- ============================================================
+MODAL: CONFIRMAR ACCIÓN
+============================================================ -->
+<div id="confirmModal" class="modal-overlay">
+<div class="modal-box" style="width:420px;">
+<div class="modal-header">
+<h3 id="modalTitle">¿ESTÁ SEGURO?</h3>
+<button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+</div>
+<div class="modal-body" style="text-align:center;">
+<div style="width:56px;height:56px;background:#fff5f5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+<i class="fas fa-exclamation-triangle" style="color:var(--c-danger);font-size:24px;"></i>
+</div>
+<p id="modalMessage" style="font-size:13px;color:var(--c-text-muted);line-height:1.6;"></p>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal()">CANCELAR</button>
+<button class="btn btn-danger" onclick="confirmAction()">CONFIRMAR</button>
+</div>
+</div>
+</div>
+<!-- ============================================================
+MODAL: VER PACIENTE / RECETA GUARDADA
+============================================================ -->
+<div id="viewPatientModal" class="modal-overlay no-print">
+<div class="modal-box" style="width:820px;max-width:95vw;">
+<div class="modal-header">
+<h3><i class="fas fa-file-medical" style="color:var(--c-accent);margin-right:8px;"></i> RECETA ÓPTICA</h3>
+<div style="display:flex;gap:8px;align-items:center;">
+<!-- Selector formato en modal -->
+<div style="display:flex;gap:6px;">
+<div class="format-option selected" data-fmt="A4" onclick="selectModalFormat('A4',this)" style="padding:6px 12px;">
+<div class="format-label" style="font-size:12px;">A4</div>
+</div>
+<div class="format-option" data-fmt="A5" onclick="selectModalFormat('A5',this)" style="padding:6px 12px;">
+<div class="format-label" style="font-size:12px;">A5</div>
+</div>
+</div>
+<button class="btn btn-accent btn-sm" onclick="printViewedPrescription()">
+<i class="fas fa-print"></i> IMPRIMIR
+</button>
+<button class="btn btn-danger btn-sm" onclick="exportViewedPDF()">
+<i class="fas fa-file-pdf"></i> PDF
+</button>
+<button class="modal-close" onclick="closeViewModal()"><i class="fas fa-times"></i></button>
+</div>
+</div>
+<div class="modal-body">
+<div class="rx-preview-wrapper" style="padding:16px;">
+<div id="viewPatientContent" class="rx-doc format-A4"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Backup Toast -->
+<div class="backup-toast" id="backupToast">
+<i class="fas fa-check-circle" style="color:var(--c-success);font-size:20px;"></i>
+<div>
+<p style="font-size:13px;font-weight:700;">BACKUP COMPLETADO</p>
+<p style="font-size:11px;color:var(--c-text-muted);" id="backupToastTime"></p>
+</div>
+</div>
+<!-- Toastify JS -->
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ================================================================
+// GLOBAL STATE
+// ================================================================
+let currentStep   = 1;
+let currentFormat = 'A4'; // para nueva receta
+let modalFormat   = 'A4'; // para modal de vista guardada
+let patients      = [];
+let settings      = {};
+let backupCount   = 0;
+let lastBackupTime = null;
+let confirmCallback = null;
+let editingPatientId = null; // ✅ NUEVO: ID del paciente en edición
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', async () => {
+initSupabase();
+await loadData();
+updateDashboard();
+setupEventListeners();
+checkAutoBackup();
+applySavedTheme();
+renderBackupList();
+});
+
+// ================================================================
+// THEME
+// ================================================================
+function setTheme(theme) {
+document.documentElement.setAttribute('data-theme', theme === 'default' ? '' : theme);
+localStorage.setItem('rx_theme', theme);
+}
+function applySavedTheme() {
+const t = localStorage.getItem('rx_theme') || 'default';
+if (t !== 'default') document.documentElement.setAttribute('data-theme', t);
+}
+
+// ================================================================
+// NAVIGATION
+// ================================================================
+const sectionTitles = {
+'dashboard':         'PANEL PRINCIPAL',
+'new-prescription':  'NUEVA RECETA',
+'patients':          'PACIENTES REGISTRADOS',
+'settings':          'CONFIGURACIÓN'
+};
+function navigateTo(section, clickedEl) {
+// Hide all
+document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+document.getElementById(section).classList.add('active');
+// Nav active state
+document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+if (clickedEl) {
+clickedEl.classList.add('active');
+} else {
+document.querySelector(`.nav-item[data-section="${section}"]`)?.classList.add('active');
+}
+// Topbar title
+document.getElementById('topbarTitle').textContent = sectionTitles[section] || section.toUpperCase();
+// Load data if needed
+if (section === 'dashboard') updateDashboard();
+if (section === 'patients') renderPatientsList();
+// Close mobile sidebar
+document.getElementById('sidebar').classList.remove('open');
+}
+function toggleSidebar() {
+document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ================================================================
+// STEP NAVIGATION
+// ================================================================
+function nextStep(step) {
+if (step === 2 && !validateStep1()) return;
+document.getElementById(`step${currentStep}`).classList.remove('active');
+currentStep = step;
+document.getElementById(`step${currentStep}`).classList.add('active');
+updateStepDots();
+if (step === 5) generatePreview();
+}
+function previousStep(step) {
+document.getElementById(`step${currentStep}`).classList.remove('active');
+currentStep = step;
+document.getElementById(`step${currentStep}`).classList.add('active');
+updateStepDots();
+}
+function updateStepDots() {
+for (let i = 1; i <= 5; i++) {
+const dot  = document.getElementById(`sdot${i}`);
+const name = document.getElementById(`sname${i}`);
+const line = document.getElementById(`sline${i}`);
+dot.className = 'step-dot';
+name.className = 'step-name';
+if (i < currentStep) {
+dot.classList.add('done');
+dot.innerHTML = '<i class="fas fa-check" style="font-size:10px;"></i>';
+if (line) line.classList.add('done');
+} else if (i === currentStep) {
+dot.classList.add('active');
+dot.textContent = i;
+name.classList.add('active');
+if (line) line.classList.remove('done');
+} else {
+dot.textContent = i;
+if (line) line.classList.remove('done');
+}
+}
+}
+
+// ================================================================
+// VALIDATION
+// ================================================================
+function validateStep1() {
+const name = document.getElementById('patientName').value.trim();
+if (!name) {
+showToast('EL NOMBRE DEL PACIENTE ES OBLIGATORIO', 'error');
+document.getElementById('patientName').focus();
+return false;
+}
+return true;
+}
+
+// ================================================================
+// CALCULATIONS
+// ================================================================
+function calculateEE(eye, distance) {
+const sphere   = parseFloat(document.querySelector(`.sphere-${eye}-${distance}`)?.value) || 0;
+const cylinder = parseFloat(document.querySelector(`.cylinder-${eye}-${distance}`)?.value) || 0;
+const ee = sphere + (cylinder / 2);
+const el = document.querySelector(`.ee-${eye}-${distance}`);
+if (el) el.value = ee !== 0 ? ee.toFixed(2) : '';
+}
+function calculateNearSphere() {
+['od', 'oi'].forEach(eye => {
+const sphere = parseFloat(document.querySelector(`.sphere-${eye}-lejos`)?.value) || 0;
+const add    = parseFloat(document.querySelector(`.add-${eye}-lejos`)?.value)    || 0;
+const el     = document.querySelector(`.sphere-${eye}-cerca`);
+if (el) el.value = (sphere + add) !== 0 ? (sphere + add).toFixed(2) : '';
+calculateEE(eye, 'cerca');
+});
+}
+
+// ================================================================
+// FORMAT SELECTOR
+// ================================================================
+function selectFormat(fmt, el) {
+currentFormat = fmt;
+document.querySelectorAll('#step5 .format-option').forEach(o => o.classList.remove('selected'));
+el.classList.add('selected');
+// Re-apply format class to preview doc
+const doc = document.getElementById('prescriptionPreview');
+doc.classList.remove('format-A4', 'format-A5');
+doc.classList.add(`format-${fmt}`);
+}
+function selectModalFormat(fmt, el) {
+modalFormat = fmt;
+document.querySelectorAll('#viewPatientModal .format-option').forEach(o => o.classList.remove('selected'));
+el.classList.add('selected');
+const doc = document.getElementById('viewPatientContent');
+doc.classList.remove('format-A4', 'format-A5');
+doc.classList.add(`format-${fmt}`);
+}
+
+// ================================================================
+// COLLECT PATIENT DATA
+// ================================================================
+function collectPatientData() {
+const g = id => document.getElementById(id)?.value || '';
+const q = cls => document.querySelector(`.${cls}`)?.value || '';
+return {
+name:            g('patientName'),
+dni:             g('patientDNI'),
+history:         g('patientHistory'),
+birthDate:       g('patientBirthDate'),
+age:             g('patientAge'),
+sex:             g('patientSex'),
+phone:           g('patientPhone'),
+email:           g('patientEmail'),
+appointmentDate: g('appointmentDate'),
+doctor:          g('doctorName'),
+nextVisit:       g('nextVisit'),
+refractionLejos: {
+od: { sphere: q('sphere-od-lejos'), cylinder: q('cylinder-od-lejos'), axis: q('axis-od-lejos'), add: q('add-od-lejos'), ee: q('ee-od-lejos'), prism: q('prism-od-lejos'), base: q('base-od-lejos'), av: q('av-od-lejos'), dip: q('dip-od-lejos') },
+oi: { sphere: q('sphere-oi-lejos'), cylinder: q('cylinder-oi-lejos'), axis: q('axis-oi-lejos'), add: q('add-oi-lejos'), ee: q('ee-oi-lejos'), prism: q('prism-oi-lejos'), base: q('base-oi-lejos'), av: q('av-oi-lejos'), dip: q('dip-oi-lejos') },
+nplOd: g('nplOd'), nplOi: g('nplOi'), dipTotal: g('dipTotal')
+},
+refractionCerca: {
+od: { sphere: q('sphere-od-cerca'), cylinder: q('cylinder-od-cerca'), axis: q('axis-od-cerca'), add: q('add-od-cerca'), ee: q('ee-od-cerca'), prism: q('prism-od-cerca'), base: q('base-od-cerca'), av: q('av-od-cerca'), dip: q('dip-od-cerca') },
+oi: { sphere: q('sphere-oi-cerca'), cylinder: q('cylinder-oi-cerca'), axis: q('axis-oi-cerca'), add: q('add-oi-cerca'), ee: q('ee-oi-cerca'), prism: q('prism-oi-cerca'), base: q('base-oi-cerca'), av: q('av-oi-cerca'), dip: q('dip-oi-cerca') },
+npcOd: g('npcOd'), npcOi: g('npcOi'), addIntermediate: g('addIntermediate')
+},
+diagnosis:          g('diagnosis'),
+treatment:          g('treatment'),
+lensType:           g('lensType'),
+observationsOD:     g('observationsOD'),
+observationsOI:     g('observationsOI'),
+visualCapacityOD:   g('visualCapacityOD'),
+visualCapacityOI:   g('visualCapacityOI'),
+recommendations:    g('recommendations'),
+product: {
+frameBrand:    g('frameBrand'),
+frameCode:     g('frameCode'),
+frameWarranty: g('frameWarranty'),
+invoiceNumber: g('invoiceNumber'),
+lensType:      g('lensTypeProduct'),
+lensMaterial:  g('lensMaterial'),
+lensTreatment: g('lensTreatment'),
+lensWarranty:  g('lensWarranty')
+}
+};
+}
+
+// ================================================================
+// BUILD PRESCRIPTION HTML
+// ================================================================
+function buildPrescriptionHTML(patient, format) {
+const v = x => x || '-';
+const s = settings;
+// Logo
+const logoHTML = s.logo
+? `<img src="${s.logo}" style="max-height:56px;max-width:160px;object-fit:contain;">`
+: `<div class="rx-icon"><i class="fas fa-eye"></i></div>`;
+// Watermark CSS var
+const wmStyle = s.logo ? `style="--watermark-url:url('${s.logo}')"` : '';
+// Refraction rows helper
+const rRow = (label, obj) => `
+<tr>
+<td>${label}</td>
+<td>${v(obj.sphere)}</td>
+<td>${v(obj.cylinder)}</td>
+<td>${v(obj.axis)}</td>
+<td>${v(obj.add)}</td>
+<td>${v(obj.ee)}</td>
+<td>${v(obj.prism)}</td>
+<td>${v(obj.av)}</td>
+<td>${v(obj.dip)}</td>
+</tr>`;
+const rl = patient.refractionLejos  || {};
+const rc = patient.refractionCerca  || {};
+const od_l = rl.od || {};
+const oi_l = rl.oi || {};
+const od_c = rc.od || {};
+const oi_c = rc.oi || {};
+const prod = patient.product || {};
+const date = patient.createdAt
+? new Date(patient.createdAt).toLocaleDateString('es-PE')
+: new Date().toLocaleDateString('es-PE');
+// Sexo display
+const sexMap = { M: 'MASCULINO', F: 'FEMENINO' };
+return `
+<div class="rx-header">
+<div class="rx-header-logo">${logoHTML}</div>
+<div class="rx-clinic-info">
+<div class="rx-clinic-name">${s.clinicName || 'CONSULTORIO'}</div>
+${s.clinicAddress ? `<p>${s.clinicAddress}</p>` : ''}
+${s.clinicPhone   ? `<p>TEL.: ${s.clinicPhone}</p>` : ''}
+${s.clinicEmail   ? `<p style="text-transform:none;">${s.clinicEmail}</p>` : ''}
+</div>
+</div>
+<div class="rx-title-band">RECETA ÓPTICA</div>
+<div class="rx-patient-grid">
+<div class="rx-field"><span>PACIENTE:</span><strong>${v(patient.name)}</strong></div>
+<div class="rx-field"><span>FECHA:</span><strong>${date}</strong></div>
+<div class="rx-field"><span>DNI:</span><strong>${v(patient.dni)}</strong></div>
+<div class="rx-field"><span>HISTORIA:</span><strong>${v(patient.history)}</strong></div>
+<div class="rx-field"><span>EDAD:</span><strong>${patient.age ? patient.age + ' AÑOS' : '-'}</strong></div>
+<div class="rx-field"><span>SEXO:</span><strong>${patient.sex ? (sexMap[patient.sex] || patient.sex) : '-'}</strong></div>
+<div class="rx-field"><span>TEL. PACIENTE:</span><strong>${v(patient.phone)}</strong></div>
+${patient.email ? `<div class="rx-field"><span>EMAIL:</span><strong style="text-transform:none;">${patient.email}</strong></div>` : ''}
+${patient.nextVisit ? `<div class="rx-field"><span>PRÓXIMA VISITA:</span><strong>${new Date(patient.nextVisit+'T12:00:00').toLocaleDateString('es-PE')}</strong></div>` : ''}
+</div>
+<!-- Lejos -->
+<div class="rx-section-title">CORRECCIÓN — VISIÓN DE LEJOS</div>
+<table class="rx-table">
+<thead><tr><th>OJO</th><th>ESFERA</th><th>CILINDRO</th><th>EJE</th><th>ADICIÓN</th><th>EE</th><th>PRISMA</th><th>AV</th><th>DIP</th></tr></thead>
+<tbody>
+${rRow('O.D.', od_l)}
+${rRow('O.I.', oi_l)}
+</tbody>
+</table>
+<!-- Cerca -->
+<div class="rx-section-title">CORRECCIÓN — VISIÓN DE CERCA</div>
+<table class="rx-table">
+<thead><tr><th>OJO</th><th>ESFERA</th><th>CILINDRO</th><th>EJE</th><th>ADICIÓN</th><th>EE</th><th>PRISMA</th><th>AV</th><th>DIP</th></tr></thead>
+<tbody>
+${rRow('O.D.', od_c)}
+${rRow('O.I.', oi_c)}
+</tbody>
+</table>
+${patient.diagnosis || patient.treatment ? `
+<div class="rx-text-block">
+<h5>DIAGNÓSTICO Y TRATAMIENTO</h5>
+${patient.diagnosis  ? `<p><strong>DX:</strong> ${patient.diagnosis}</p>` : ''}
+${patient.treatment  ? `<p><strong>TRAT.:</strong> ${patient.treatment}</p>` : ''}
+</div>` : ''}
+${patient.lensType ? `<p style="font-size:11px;margin-bottom:8px;"><strong>TIPO DE LENTE:</strong> ${patient.lensType}</p>` : ''}
+${patient.recommendations ? `
+<div class="rx-text-block">
+<h5>RECOMENDACIONES</h5>
+<p>${patient.recommendations}</p>
+</div>` : ''}
+${(prod.frameBrand || prod.lensType || prod.lensMaterial) ? `
+<div class="rx-text-block">
+<h5>PRODUCTO RECETADO</h5>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px;">
+${prod.frameBrand   ? `<p><strong>ARMAZÓN:</strong> ${prod.frameBrand} ${prod.frameCode||''}</p>` : ''}
+${prod.lensType     ? `<p><strong>TIPO LENTE:</strong> ${prod.lensType}</p>` : ''}
+${prod.lensMaterial ? `<p><strong>MATERIAL:</strong> ${prod.lensMaterial}</p>` : ''}
+${prod.lensTreatment? `<p><strong>TRATAMIENTO:</strong> ${prod.lensTreatment}</p>` : ''}
+${prod.lensWarranty ? `<p><strong>GARANTÍA LENTE:</strong> ${prod.lensWarranty}</p>` : ''}
+${prod.frameWarranty? `<p><strong>GARANTÍA ARMAZÓN:</strong> ${prod.frameWarranty}</p>` : ''}
+${prod.invoiceNumber? `<p><strong>N° FACTURA:</strong> ${prod.invoiceNumber}</p>` : ''}
+</div>
+</div>` : ''}
+<!-- Firma -->
+<div class="rx-footer">
+<div class="rx-signature">
+<div class="rx-signature-line"></div>
+<p><strong>${s.doctorName || 'PROFESIONAL'}</strong></p>
+${s.doctorSpecialty ? `<p>${s.doctorSpecialty}</p>` : ''}
+${s.doctorLicense   ? `<p>COL. ${s.doctorLicense}</p>` : ''}
+</div>
+<div></div>
+<div class="rx-footer-info">
+${s.clinicPhone   ? `TEL.: ${s.clinicPhone} ` : ''}
+${s.clinicEmail   ? `<span style="text-transform:none;">| ${s.clinicEmail}</span>` : ''}
+${s.clinicAddress ? `<br>${s.clinicAddress}` : ''}
+${s.footerText    ? `<br>${s.footerText}` : ''}
+</div>
+</div>`;
+}
+
+// ================================================================
+// GENERATE PREVIEW
+// ================================================================
+function generatePreview() {
+const patient = collectPatientData();
+const preview = document.getElementById('prescriptionPreview');
+// Apply watermark
+if (settings.logo) {
+preview.style.setProperty('--watermark-url', `url('${settings.logo}')`);
+} else {
+preview.style.removeProperty('--watermark-url');
+}
+preview.innerHTML = buildPrescriptionHTML(patient, currentFormat);
+}
+
+// ================================================================
+// PRINT / EXPORT
+// ================================================================
+function printPrescription() {
+const doc    = document.getElementById('prescriptionPreview');
+const format = currentFormat;
+openPrintWindow(doc.innerHTML, format);
+}
+function exportPDF() {
+showToast('GENERANDO PDF... USE "GUARDAR COMO PDF" EN EL DIÁLOGO DE IMPRESIÓN', 'info');
+setTimeout(printPrescription, 500);
+}
+function printViewedPrescription() {
+const doc = document.getElementById('viewPatientContent');
+openPrintWindow(doc.innerHTML, modalFormat);
+}
+function exportViewedPDF() {
+showToast('GENERANDO PDF...', 'info');
+setTimeout(printViewedPrescription, 500);
+}
+function openPrintWindow(content, format) {
+const win = window.open('', '_blank', 'width=900,height=1000');
+const pageSize = format === 'A5' ? '148mm 210mm' : '210mm 297mm';
+const padding  = format === 'A5' ? '15mm 16mm' : '20mm 22mm';
+const fontSize = format === 'A5' ? '9.5pt' : '11pt';
+win.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>RECETA ÓPTICA</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+@page { size: ${pageSize}; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+font-family: 'Lato', sans-serif;
+font-size: ${fontSize};
+color: #1c2a38;
+padding: ${padding};
+text-transform: uppercase;
+}
+span[style*="text-transform:none"], strong[style*="text-transform:none"] { text-transform: none !important; }
+.rx-header { display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #1a3d5c; padding-bottom:12px; margin-bottom:14px; }
+.rx-clinic-info { text-align:right; }
+.rx-clinic-name { font-size:16px; font-weight:900; color:#1a3d5c; margin-bottom:2px; }
+.rx-clinic-info p { font-size:10px; color:#5a7080; line-height:1.5; }
+.rx-icon { width:44px; height:44px; background:#d6e8f5; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#1a3d5c; font-size:20px; }
+.rx-title-band { background:#1a3d5c; color:#fff; text-align:center; font-size:12px; font-weight:700; letter-spacing:3px; padding:6px; margin-bottom:14px; border-radius:4px; }
+.rx-patient-grid { display:grid; grid-template-columns:1fr 1fr; gap:3px 16px; margin-bottom:14px; padding:10px; background:#f8fafc; border-radius:4px; border:1px solid #e2eaf2; font-size:10.5px; }
+.rx-field span { color:#5a7080; margin-right:4px; }
+.rx-section-title { font-size:10px; font-weight:700; letter-spacing:1.5px; color:#1a3d5c; margin-bottom:5px; padding-bottom:3px; border-bottom:1px solid #d6e8f5; }
+.rx-table { width:100%; border-collapse:collapse; margin-bottom:12px; font-size:10.5px; }
+.rx-table th { background:#1a3d5c; color:#fff; padding:6px 7px; text-align:center; font-size:9px; font-weight:700; letter-spacing:.8px; }
+.rx-table td { border:1px solid #d8dfe8; padding:5px 7px; text-align:center; }
+.rx-table tr:nth-child(even) td { background:#f4f6f9; }
+.rx-table td:first-child { font-weight:700; background:#d6e8f5; color:#1a3d5c; }
+.rx-text-block { margin-bottom:10px; padding:8px 10px; background:#f8fafc; border-left:3px solid #1a3d5c; border-radius:0 4px 4px 0; font-size:10.5px; }
+.rx-text-block h5 { font-size:9px; font-weight:700; letter-spacing:1px; color:#1a3d5c; margin-bottom:3px; }
+.rx-footer { margin-top:18px; border-top:1px solid #d8dfe8; padding-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.rx-signature-line { border-bottom:1px solid #1c2a38; margin-bottom:3px; height:35px; }
+.rx-signature { text-align:center; }
+.rx-signature p { font-size:9px; color:#5a7080; }
+.rx-footer-info { font-size:9px; color:#8da4b4; text-align:center; line-height:1.5; grid-column:span 2; margin-top:4px; }
+img { max-height:50px; max-width:150px; object-fit:contain; }
+/* Watermark */
+body::before {
+content: '';
+position: fixed;
+top: 50%; left: 50%;
+transform: translate(-50%, -50%);
+width: 55%;
+aspect-ratio: 16/9;
+background-image: var(--wm, none);
+background-repeat: no-repeat;
+background-size: contain;
+background-position: center;
+opacity: 0.04;
+pointer-events: none;
+z-index: -1;
+}
+</style>
+${settings.logo ? `<style>body::before { --wm: url('${settings.logo}'); }</style>` : ''}
+</head>
+<body>${content}</body>
+</html>`);
+win.document.close();
+win.focus();
+setTimeout(() => { win.print(); win.close(); }, 800);
+}
+
+// ================================================================
+// SAVE PRESCRIPTION
+// ================================================================
+function savePrescription() {
+const data = collectPatientData();
+if (!data.name) { showToast('EL NOMBRE DEL PACIENTE ES OBLIGATORIO', 'error'); return; }
+data.id        = Date.now();
+data.createdAt = new Date().toISOString();
+patients.unshift(data);
+saveData();
+showToast('RECETA GUARDADA EXITOSAMENTE', 'success');
+if (patients.length % 5 === 0) exportBackup(true);
+setTimeout(() => { navigateTo('dashboard', null); resetForm(); }, 1500);
+}
+
+// ================================================================
+// RESET FORM
+// ================================================================
+function resetForm() {
+document.querySelectorAll('#new-prescription input, #new-prescription textarea, #new-prescription select').forEach(el => {
+if (el.type !== 'button') el.value = '';
+});
+currentStep = 1;
+document.querySelectorAll('.prescription-step').forEach(s => s.classList.remove('active'));
+document.getElementById('step1').classList.add('active');
+updateStepDots();
+// Reset format
+currentFormat = 'A4';
+// Clear editing state
+editingPatientId = null;
+}
+function clearPatientData() {
+showModal('¿LIMPIAR FORMULARIO?', 'SE BORRARÁN TODOS LOS DATOS DEL FORMULARIO ACTUAL. ¿CONTINUAR?', () => {
+resetForm();
+showToast('FORMULARIO LIMPIADO', 'success');
+closeModal();
+});
+}
+
+// ================================================================
+// ✅ EDITAR PACIENTE - NUEVAS FUNCIONES AGREGADAS
+// ================================================================
+function editPatient(id) {
+const patient = patients.find(p => p.id === id);
+if (!patient) { showToast('PACIENTE NO ENCONTRADO', 'error'); return; }
+
+// Cargar datos en el formulario
+document.getElementById('patientName').value = patient.name || '';
+document.getElementById('patientDNI').value = patient.dni || '';
+document.getElementById('patientHistory').value = patient.history || '';
+document.getElementById('patientSex').value = patient.sex || '';
+document.getElementById('patientBirthDate').value = patient.birthDate || '';
+document.getElementById('patientAge').value = patient.age || '';
+document.getElementById('patientPhone').value = patient.phone || '';
+document.getElementById('patientEmail').value = patient.email || '';
+document.getElementById('appointmentDate').value = patient.appointmentDate || '';
+document.getElementById('nextVisit').value = patient.nextVisit || '';
+document.getElementById('doctorName').value = patient.doctor || '';
+
+// Marcar modo edición
+editingPatientId = id;
+
+// Ir a nueva receta paso 1
+navigateTo('new-prescription', null);
+nextStep(1);
+
+showToast('Editando paciente: ' + patient.name, 'warning');
+}
+
+function deletePatient(id) {
+if (confirm('¿Está seguro de eliminar este paciente y todas sus recetas?')) {
+patients = patients.filter(p => p.id !== id);
+eliminarPaciente(id);
+renderPatientsList();
+updateDashboard();
+showToast('Paciente eliminado correctamente', 'success');
+}
+}
+
+// Modificar savePrescription para soportar edición + Supabase
+const originalSavePrescription = savePrescription;
+savePrescription = async function() {
+const data = collectPatientData();
+if (!data.name) { showToast('EL NOMBRE DEL PACIENTE ES OBLIGATORIO', 'error'); return; }
+
+if (editingPatientId) {
+  // Modo edición: actualizar paciente existente
+  const index = patients.findIndex(p => p.id === editingPatientId);
+  if (index !== -1) {
+    data.id = editingPatientId;
+    data.createdAt = patients[index].createdAt;
+    patients[index] = data;
+    await actualizarPaciente(data);
+    showToast('PACIENTE ACTUALIZADO EXITOSAMENTE', 'success');
+  }
+  editingPatientId = null;
+} else {
+  // Modo creación: nuevo paciente
+  data.id = Date.now();
+  data.createdAt = new Date().toISOString();
+  patients.unshift(data);
+  await guardarPaciente(data);
+  showToast('RECETA GUARDADA EXITOSAMENTE', 'success');
+}
+
+saveData();
+if (patients.length % 5 === 0) exportBackup(true);
+setTimeout(() => { navigateTo('dashboard', null); resetForm(); }, 1500);
+}
+
+// ================================================================
+// RENDER PATIENTS LIST
+// ================================================================
+function renderPatientsList() {
+const container = document.getElementById('patientsList');
+if (patients.length === 0) {
+container.innerHTML = `
+<div style="text-align:center;padding:48px;color:var(--c-text-light);">
+<i class="fas fa-user-plus" style="font-size:40px;display:block;margin-bottom:12px;"></i>
+<p style="font-size:13px;margin-bottom:16px;">AÚN NO HAY PACIENTES REGISTRADOS</p>
+<button class="btn btn-primary btn-sm" onclick="navigateTo('new-prescription', null)">
+<i class="fas fa-plus"></i> CREAR PRIMERA RECETA
+</button>
+</div>`;
+return;
+}
+container.innerHTML = patients.map(p => `
+<div class="patient-card">
+<div class="patient-avatar"><i class="fas fa-user"></i></div>
+<div class="patient-info">
+<div class="patient-name">${p.name}</div>
+<div class="patient-meta">${p.dni ? 'DNI: ' + p.dni + ' &nbsp;|&nbsp; ' : ''}${new Date(p.createdAt).toLocaleDateString('es-PE')}</div>
+</div>
+<div class="patient-actions">
+<button class="icon-btn" onclick="viewPatient(${p.id})" title="VER RECETA">
+<i class="fas fa-eye"></i>
+</button>
+<button class="icon-btn" onclick="editPatient(${p.id})" title="EDITAR PACIENTE">
+<i class="fas fa-pencil-alt"></i>
+</button>
+<button class="icon-btn danger" onclick="deletePatient(${p.id})" title="ELIMINAR">
+<i class="fas fa-trash"></i>
+</button>
+</div>
+</div>`).join('');
+}
+function searchPatients() {
+const q = document.getElementById('patientSearch').value.toLowerCase();
+document.querySelectorAll('#patientsList .patient-card').forEach(card => {
+card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+});
+}
+
+// ================================================================
+// VIEW PATIENT
+// ================================================================
+function viewPatient(id) {
+const patient = patients.find(p => p.id === id);
+if (!patient) { showToast('PACIENTE NO ENCONTRADO', 'error'); return; }
+const container = document.getElementById('viewPatientContent');
+container.className = `rx-doc format-${modalFormat}`;
+if (settings.logo) {
+container.style.setProperty('--watermark-url', `url('${settings.logo}')`);
+}
+container.innerHTML = buildPrescriptionHTML(patient, modalFormat);
+document.getElementById('viewPatientModal').classList.add('show');
+}
+function closeViewModal() {
+document.getElementById('viewPatientModal').classList.remove('show');
+}
+
+// ================================================================
+// DELETE PATIENT
+// ================================================================
+function confirmDeletePatient(id) {
+showModal('¿ELIMINAR PACIENTE?', 'ESTA ACCIÓN NO SE PUEDE DESHACER. ¿ESTÁ SEGURO?', async () => {
+patients = patients.filter(p => p.id !== id);
+await eliminarPaciente(id);
+renderPatientsList();
+updateDashboard();
+showToast('PACIENTE ELIMINADO', 'success');
+closeModal();
+});
+}
+
+// ================================================================
+// DASHBOARD
+// ================================================================
+function updateDashboard() {
+document.getElementById('statPatients').textContent = patients.length;
+const thisMonth = new Date().getMonth();
+const thisYear  = new Date().getFullYear();
+const monthly   = patients.filter(p => {
+const d = new Date(p.createdAt);
+return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+}).length;
+document.getElementById('statPrescriptions').textContent = monthly;
+const now     = new Date();
+const future  = new Date(now.getTime() + 30 * 86400000);
+const upcoming = patients.filter(p => {
+if (!p.nextVisit) return false;
+const nv = new Date(p.nextVisit + 'T12:00:00');
+return nv >= now && nv <= future;
+}).length;
+document.getElementById('statAppointments').textContent = upcoming;
+// Recent list
+const recent = document.getElementById('recentPrescriptionsList');
+if (patients.length === 0) {
+recent.innerHTML = `
+<div style="text-align:center;padding:32px;color:var(--c-text-light);">
+<i class="fas fa-file-medical" style="font-size:36px;display:block;margin-bottom:12px;"></i>
+<p style="font-size:13px;">AÚN NO HAY RECETAS. ¡CREA LA PRIMERA!</p>
+</div>`;
+} else {
+recent.innerHTML = patients.slice(0, 6).map(p => `
+<div class="patient-card" style="margin-bottom:8px;">
+<div class="patient-avatar"><i class="fas fa-user"></i></div>
+<div class="patient-info">
+<div class="patient-name">${p.name}</div>
+<div class="patient-meta">${new Date(p.createdAt).toLocaleDateString('es-PE')}</div>
+</div>
+<button class="icon-btn" onclick="viewPatient(${p.id})">
+<i class="fas fa-eye"></i>
+</button>
+</div>`).join('');
+}
+}
+
+// ================================================================
+// SETTINGS
+// ================================================================
+function saveSettings() {
+settings = {
+logo:            settings.logo,
+clinicName:      document.getElementById('clinicName').value,
+clinicRUC:       document.getElementById('clinicRUC').value,
+clinicPhone:     document.getElementById('clinicPhone').value,
+clinicAddress:   document.getElementById('clinicAddress').value,
+clinicEmail:     document.getElementById('clinicEmail').value,
+doctorName:      document.getElementById('doctorNameConfig').value,
+doctorLicense:   document.getElementById('doctorLicense').value,
+doctorSpecialty: document.getElementById('doctorSpecialty').value,
+footerText:      document.getElementById('footerText').value
+};
+saveData();
+updateSidebarLogo();
+showToast('CONFIGURACIÓN GUARDADA', 'success');
+}
+function loadSettings() {
+loadSettingsToForm();
+showToast('CONFIGURACIÓN RECARGADA', 'info');
+}
+function loadSettingsToForm() {
+if (!settings) return;
+const ids = ['clinicName','clinicRUC','clinicPhone','clinicAddress','clinicEmail',
+'doctorNameConfig','doctorLicense','doctorSpecialty','footerText'];
+const keys = ['clinicName','clinicRUC','clinicPhone','clinicAddress','clinicEmail',
+'doctorName','doctorLicense','doctorSpecialty','footerText'];
+ids.forEach((id, i) => {
+const el = document.getElementById(id);
+if (el) el.value = settings[keys[i]] || '';
+});
+if (settings.logo) showLogoPreview(settings.logo);
+}
+
+// ================================================================
+// LOGO UPLOAD
+// ================================================================
+function uploadLogo(event) {
+const file = event.target.files[0];
+if (!file) return;
+if (file.size > 3 * 1024 * 1024) { showToast('EL ARCHIVO DEBE SER MENOR A 3MB', 'error'); return; }
+const reader = new FileReader();
+reader.onload = e => {
+settings.logo = e.target.result;
+showLogoPreview(e.target.result);
+updateSidebarLogo();
+showToast('LOGO CARGADO CORRECTAMENTE', 'success');
+};
+reader.readAsDataURL(file);
+event.target.value = '';
+}
+function showLogoPreview(src) {
+const zone = document.getElementById('logoUploadZone');
+const hint = document.getElementById('logoUploadHint');
+hint.style.display = 'none';
+// Remove existing img
+const existing = zone.querySelector('img');
+if (existing) existing.remove();
+const img = document.createElement('img');
+img.src = src;
+zone.appendChild(img);
+}
+function removeLogo() {
+settings.logo = null;
+const zone = document.getElementById('logoUploadZone');
+const hint = document.getElementById('logoUploadHint');
+const img  = zone.querySelector('img');
+if (img) img.remove();
+hint.style.display = '';
+updateSidebarLogo();
+showToast('LOGO ELIMINADO', 'info');
+}
+function openLogoUpload() {
+navigateTo('settings', document.querySelector('.nav-item[data-section="settings"]'));
+setTimeout(() => document.getElementById('logoUpload').click(), 300);
+}
+function updateSidebarLogo() {
+const container = document.getElementById('sidebarLogoContainer');
+if (settings.logo) {
+container.innerHTML = `<img class="sidebar-logo-img" src="${settings.logo}" alt="LOGO">`;
+} else {
+container.innerHTML = `
+<div class="sidebar-logo-placeholder">
+<div class="sidebar-logo-icon">
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="32" cy="32" rx="28" ry="16" stroke="white" stroke-width="3"/>
+<circle cx="32" cy="32" r="9" fill="white" opacity=".9"/>
+<circle cx="29" cy="29" r="3" fill="rgba(26,61,92,.6)"/>
+</svg>
+</div>
+<div class="sidebar-logo-text">
+<h1>SISTEMA RECETAS</h1>
+<p>OFTALMOLÓGICAS V5.0</p>
+</div>
+</div>`;
+}
+}
+
+// ================================================================
+// SUPABASE CONFIG
+// ================================================================
+const SUPABASE_URL     = 'https://ecpwlqvawbjahblwmbvo.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_82wvSX7vDgKuQzJuRNUoEQ_sXKdW3M4';
+
+let supabase            = null;
+let realtimeChannel     = null;
+let realtimeInitialized = false; // ✅ evita suscripciones múltiples
+let isLoading           = false;  // ✅ mutex anti loop-infinito
+let _pendingReload      = false;  // ✅ debounce para eventos rápidos
+
+function initSupabase() {
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('[Supabase] Cliente inicializado');
+  } catch(e) {
+    console.error('[Supabase] Error al inicializar:', e);
+  }
+}
+
+// ================================================================
+// DATA PERSISTENCE — Supabase
+// ================================================================
+
+// ✅ VERSIÓN SEGURA con mutex — evita loops infinitos
+async function cargarPacientes() {
+  if (isLoading) { console.log('[Supabase] Ya está cargando, skip.'); return; }
+  if (!supabase)  { console.warn('[Supabase] No inicializado'); return; }
+  isLoading = true;
+  console.log('[Supabase] Cargando pacientes...');
+  try {
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .order('id', { ascending: false });
+    if (error) throw error;
+    patients = data.map(p => p.data);
+    console.log('[Supabase] Pacientes cargados:', patients.length);
+    updateDashboard();
+    renderPatientsList();
+    // Mirror en localStorage como fallback
+    localStorage.setItem('rx_patients', JSON.stringify(patients));
+  } catch(e) {
+    console.error('[Supabase] Error al cargar pacientes:', e);
+    // Fallback a localStorage si Supabase falla
+    try {
+      const p = localStorage.getItem('rx_patients');
+      if (p) patients = JSON.parse(p);
+      updateDashboard();
+      renderPatientsList();
+    } catch(le) { console.warn('Fallback localStorage también falló', le); }
+  } finally {
+    isLoading = false; // ✅ siempre libera el mutex aunque haya error
+  }
+}
+
+async function guardarPaciente(paciente) {
+  if (!supabase) { console.warn('[Supabase] No inicializado'); return; }
+  try {
+    const { error } = await supabase
+      .from('patients')
+      .upsert({ id: paciente.id, data: paciente }, { onConflict: 'id' });
+    if (error) throw error;
+    // Mirror en localStorage como fallback
+    localStorage.setItem('rx_patients', JSON.stringify(patients));
+  } catch(e) {
+    console.error('[Supabase] Error al guardar paciente:', e);
+    showToast('ERROR AL GUARDAR EN LA NUBE', 'error');
+  }
+}
+
+async function actualizarPaciente(paciente) {
+  if (!supabase) { console.warn('[Supabase] No inicializado'); return; }
+  try {
+    const { error } = await supabase
+      .from('patients')
+      .update({ data: paciente })
+      .eq('id', paciente.id);
+    if (error) throw error;
+    localStorage.setItem('rx_patients', JSON.stringify(patients));
+  } catch(e) {
+    console.error('[Supabase] Error al actualizar paciente:', e);
+    showToast('ERROR AL ACTUALIZAR EN LA NUBE', 'error');
+  }
+}
+
+async function eliminarPaciente(id) {
+  if (!supabase) { console.warn('[Supabase] No inicializado'); return; }
+  try {
+    const { error } = await supabase
+      .from('patients')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    localStorage.setItem('rx_patients', JSON.stringify(patients));
+  } catch(e) {
+    console.error('[Supabase] Error al eliminar paciente:', e);
+    showToast('ERROR AL ELIMINAR EN LA NUBE', 'error');
+  }
+}
+
+async function loadData() {
+  // Cargar settings desde localStorage (no viajan a Supabase)
+  try {
+    const s = localStorage.getItem('rx_settings');
+    const b = localStorage.getItem('rx_backup_info');
+    if (s) { settings = JSON.parse(s); loadSettingsToForm(); updateSidebarLogo(); }
+    if (b) {
+      const bi = JSON.parse(b);
+      backupCount    = bi.count   || 0;
+      lastBackupTime = bi.lastTime || null;
+      updateBackupStatus();
+    }
+    renderBackupList();
+  } catch(e) { console.warn('Error loading settings', e); }
+  // Cargar pacientes desde Supabase
+  await cargarPacientes();
+  // Iniciar Realtime
+  initRealtime();
+}
+
+function saveData() {
+  // Settings siguen en localStorage
+  localStorage.setItem('rx_settings',    JSON.stringify(settings));
+  localStorage.setItem('rx_backup_info', JSON.stringify({ count: backupCount, lastTime: lastBackupTime }));
+}
+
+// ================================================================
+// TIEMPO REAL — Supabase Realtime (anti-freeze, sin loops)
+// ================================================================
+function initRealtime() {
+  // ✅ Una sola suscripción garantizada
+  if (!supabase || realtimeInitialized) return;
+  realtimeInitialized = true;
+
+  console.log('[Realtime] Iniciando suscripción...');
+
+  realtimeChannel = supabase
+    .channel('patients-changes')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'patients' },
+      (payload) => {
+        console.log('[Realtime] Cambio detectado:', payload.eventType, payload);
+
+        // ✅ Manejo GRANULAR por evento — evita recargar todo desde la BD
+        if (payload.eventType === 'INSERT' && payload.new) {
+          const nuevo = payload.new.data;
+          if (nuevo && !patients.find(p => p.id === nuevo.id)) {
+            patients.unshift(nuevo);
+            updateDashboard();
+            renderPatientsList();
+            localStorage.setItem('rx_patients', JSON.stringify(patients));
+          }
+          return;
+        }
+
+        if (payload.eventType === 'UPDATE' && payload.new) {
+          const actualizado = payload.new.data;
+          if (actualizado) {
+            const idx = patients.findIndex(p => p.id === actualizado.id);
+            if (idx !== -1) {
+              patients[idx] = actualizado;
+            } else {
+              patients.unshift(actualizado);
+            }
+            updateDashboard();
+            renderPatientsList();
+            localStorage.setItem('rx_patients', JSON.stringify(patients));
+          }
+          return;
+        }
+
+        if (payload.eventType === 'DELETE' && payload.old) {
+          const deletedId = payload.old.id;
+          if (deletedId) {
+            patients = patients.filter(p => p.id !== deletedId);
+            updateDashboard();
+            renderPatientsList();
+            localStorage.setItem('rx_patients', JSON.stringify(patients));
+          }
+          return;
+        }
+
+        // ✅ Fallback con debounce: solo si el evento no fue manejado arriba
+        // evita múltiples cargas simultáneas en ráfagas de eventos
+        if (_pendingReload) return;
+        _pendingReload = true;
+        setTimeout(() => {
+          _pendingReload = false;
+          cargarPacientes();
+        }, 400);
+      }
+    )
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('[Realtime] ✅ Suscripción activa — sincronización en tiempo real habilitada');
+      } else if (status === 'CHANNEL_ERROR') {
+        console.error('[Realtime] Error en canal — reintentando...');
+        realtimeInitialized = false; // permite reintentar
+      } else if (status === 'CLOSED') {
+        console.warn('[Realtime] Canal cerrado');
+        realtimeInitialized = false;
+      }
+    });
+}
+
+// ================================================================
+// BACKUP
+// ================================================================
+
+// In-memory backup store (key: timestamp ISO string, value: {name, date, data})
+let backupStore = [];
+
+function getBackupKey() { return 'rx_backups_v2'; }
+
+function loadBackupStore() {
+  try {
+    const raw = localStorage.getItem(getBackupKey());
+    if (raw) backupStore = JSON.parse(raw);
+  } catch(e) { backupStore = []; }
+}
+
+function saveBackupStore() {
+  try {
+    localStorage.setItem(getBackupKey(), JSON.stringify(backupStore));
+  } catch(e) { console.error('Error guardando backups', e); }
+}
+
+function exportBackup(auto = false) {
+  const now = new Date();
+  // Formato nombre: backup-YYYY-MM-DD-HH:mm
+  const pad = n => String(n).padStart(2,'0');
+  const name = `backup-${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}-${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const payload = { version:'5.0', exportDate: now.toISOString(), patients, settings, backupCount: backupCount + 1 };
+
+  // Descargar el archivo
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${name}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Guardar en el store
+  loadBackupStore();
+  backupStore.unshift({ name, date: now.toISOString(), data: payload });
+  // Mantener solo los últimos 20 backups en memoria
+  if (backupStore.length > 20) backupStore = backupStore.slice(0, 20);
+  saveBackupStore();
+  renderBackupList();
+
+  backupCount++;
+  lastBackupTime = now.toISOString();
+  saveData();
+  updateBackupStatus();
+  if (!auto) { showToast('BACKUP EXPORTADO Y GUARDADO', 'success'); showBackupToast(); }
+}
+
+function importBackup(event) {
+const file = event.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = async e => {
+try {
+const data = JSON.parse(e.target.result);
+if (data.patients && Array.isArray(data.patients)) {
+showModal(`¿IMPORTAR BACKUP?`, `SE IMPORTARÁN ${data.patients.length} PACIENTES. LOS DATOS ACTUALES SE REEMPLAZARÁN.`, async () => {
+  // Borrar todos en Supabase
+  if (supabase) {
+    const { error } = await supabase.from('patients').delete().neq('id', 0);
+    if (error) console.error('[Supabase] Error al limpiar pacientes:', error);
+  }
+  patients    = data.patients;
+  settings    = data.settings || {};
+  backupCount = data.backupCount || backupCount;
+  // Resubir todos a Supabase
+  for (const p of patients) {
+    await guardarPaciente(p);
+  }
+  saveData();
+  loadSettingsToForm();
+  updateSidebarLogo();
+  updateDashboard();
+  renderPatientsList();
+  showToast('BACKUP IMPORTADO CORRECTAMENTE', 'success');
+  closeModal();
+});
+} else { showToast('ARCHIVO DE BACKUP INVÁLIDO', 'error'); }
+} catch { showToast('ERROR AL LEER EL ARCHIVO', 'error'); }
+};
+reader.readAsText(file);
+event.target.value = '';
+}
+
+function renderBackupList() {
+loadBackupStore();
+const container = document.getElementById('backupList');
+const counter   = document.getElementById('backupCount');
+if (!container) return;
+const count = backupStore.length;
+if (counter) counter.textContent = `${count} BACKUP${count !== 1 ? 'S' : ''}`;
+if (count === 0) {
+container.innerHTML = `
+<div style="text-align:center;padding:20px;color:var(--c-text-light);font-size:12px;">
+<i class="fas fa-archive" style="display:block;font-size:24px;margin-bottom:8px;opacity:.4;"></i>
+AÚN NO HAY BACKUPS. EXPORTE UNO PARA EMPEZAR.
+</div>`;
+return;
+}
+container.innerHTML = backupStore.map((bk, idx) => `
+<div class="backup-item">
+<div>
+<div class="backup-item-name">👉 ${bk.name}</div>
+<div class="backup-item-meta">${bk.data.patients ? bk.data.patients.length + ' PACIENTES' : ''} ${idx === 0 ? '&nbsp;— MÁS RECIENTE' : ''}</div>
+</div>
+<div class="backup-item-actions">
+<button class="btn btn-success btn-sm" onclick="restoreBackup(${idx})">
+<i class="fas fa-undo"></i> RESTAURAR
+</button>
+<button class="btn btn-ghost btn-sm" onclick="downloadBackup(${idx})">
+<i class="fas fa-download"></i> DESCARGAR
+</button>
+</div>
+</div>`).join('');
+}
+
+function downloadBackup(idx) {
+loadBackupStore();
+const bk = backupStore[idx];
+if (!bk) return;
+const blob = new Blob([JSON.stringify(bk.data, null, 2)], { type:'application/json' });
+const url  = URL.createObjectURL(blob);
+const a    = document.createElement('a');
+a.href     = url;
+a.download = `${bk.name}.json`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+showToast('BACKUP DESCARGADO', 'success');
+}
+
+function restoreBackup(idx) {
+loadBackupStore();
+const bk = backupStore[idx];
+if (!bk) return;
+const data = bk.data;
+if (!data.patients || !Array.isArray(data.patients)) { showToast('BACKUP INVÁLIDO', 'error'); return; }
+showModal(`¿RESTAURAR BACKUP?`, `SE RESTAURARÁN ${data.patients.length} PACIENTES DESDE "${bk.name}". LOS DATOS ACTUALES SE REEMPLAZARÁN.`, async () => {
+  if (supabase) {
+    const { error } = await supabase.from('patients').delete().neq('id', 0);
+    if (error) console.error('[Supabase] Error al limpiar pacientes:', error);
+  }
+  patients    = data.patients;
+  settings    = data.settings || settings;
+  saveData();
+  for (const p of patients) { await guardarPaciente(p); }
+  loadSettingsToForm();
+  updateSidebarLogo();
+  updateDashboard();
+  renderPatientsList();
+  showToast('BACKUP RESTAURADO CORRECTAMENTE', 'success');
+  closeModal();
+});
+}
+
+function updateBackupStatus() {
+const dateStr = lastBackupTime ? new Date(lastBackupTime).toLocaleDateString('es-PE') : 'NUNCA';
+const sidebarEl = document.getElementById('sidebarBackupDate');
+const statEl    = document.getElementById('statBackup');
+if (sidebarEl) sidebarEl.textContent = dateStr;
+if (statEl)    statEl.textContent    = backupCount;
+}
+function checkAutoBackup() {
+if (lastBackupTime) {
+const hrs = (new Date() - new Date(lastBackupTime)) / 3600000;
+if (hrs > 24 && patients.length > 0) showToast('⚠️ RECUERDE EXPORTAR UN BACKUP', 'warning');
+}
+}
+function showBackupToast() {
+const t = document.getElementById('backupToast');
+document.getElementById('backupToastTime').textContent = new Date().toLocaleTimeString('es-PE');
+t.classList.add('show');
+setTimeout(() => t.classList.remove('show'), 5000);
+}
+
+// ================================================================
+// MODAL SYSTEM
+// ================================================================
+function showModal(title, message, callback) {
+document.getElementById('modalTitle').textContent   = title;
+document.getElementById('modalMessage').textContent = message;
+confirmCallback = callback;
+document.getElementById('confirmModal').classList.add('show');
+}
+function closeModal() {
+document.getElementById('confirmModal').classList.remove('show');
+confirmCallback = null;
+}
+function confirmAction() { if (confirmCallback) confirmCallback(); }
+function confirmClearAllData() {
+showModal('⚠️ ¿ELIMINAR TODOS LOS DATOS?', 'ESTA ACCIÓN ELIMINARÁ PERMANENTEMENTE TODOS LOS PACIENTES Y CONFIGURACIONES. ¡ASEGÚRESE DE TENER UN BACKUP!', async () => {
+if (supabase) {
+  const { error } = await supabase.from('patients').delete().neq('id', 0);
+  if (error) console.error('[Supabase] Error al limpiar:', error);
+}
+localStorage.clear();
+patients = []; settings = {}; backupCount = 0; lastBackupTime = null;
+showToast('TODOS LOS DATOS ELIMINADOS', 'success');
+closeModal();
+setTimeout(() => location.reload(), 1200);
+});
+}
+
+// ================================================================
+// TOAST NOTIFICATIONS
+// ================================================================
+function showToast(message, type = 'info') {
+const colors = {
+success: 'linear-gradient(135deg, #1e7d55, #15644a)',
+error:   'linear-gradient(135deg, #c0392b, #a02020)',
+warning: 'linear-gradient(135deg, #b8780e, #9a6309)',
+info:    'linear-gradient(135deg, #2e7daa, #1a5c82)'
+};
+Toastify({
+text: message,
+duration: 3500,
+gravity: 'top',
+position: 'right',
+style: { background: colors[type], borderRadius: '8px', fontFamily: "'Lato', sans-serif", fontSize: '12px', fontWeight: '700', letterSpacing: '.5px' }
+}).showToast();
+}
+
+// ================================================================
+// EVENT LISTENERS
+// ================================================================
+function setupEventListeners() {
+// Age calc from birthdate
+document.getElementById('patientBirthDate').addEventListener('change', function() {
+const bd = new Date(this.value);
+const now = new Date();
+let age = now.getFullYear() - bd.getFullYear();
+if (now.getMonth() < bd.getMonth() || (now.getMonth() === bd.getMonth() && now.getDate() < bd.getDate())) age--;
+document.getElementById('patientAge').value = age > 0 ? age : '';
+});
+// Default today's date
+document.getElementById('appointmentDate').valueAsDate = new Date();
+// Close modals on overlay click
+document.getElementById('confirmModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('viewPatientModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeViewModal(); });
+// ESC key
+document.addEventListener('keydown', e => {
+if (e.key === 'Escape') { closeModal(); closeViewModal(); }
+});
+}
+</script>
+</body>
+</html>
