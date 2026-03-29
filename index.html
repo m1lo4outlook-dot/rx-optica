@@ -1255,23 +1255,370 @@ to   { opacity: 1; transform: translateX(0); }
 .backup-toast.show { display: flex; }
 
 /* ============================================================
-RESPONSIVE
+RESPONSIVE — MEJORAS COMPLETAS MOBILE-FIRST
+============================================================ */
+
+/* ── Imágenes responsive globales ── */
+img { max-width: 100%; height: auto; }
+
+/* ── Prevenir scroll horizontal global ── */
+body { overflow-x: hidden; }
+.main-wrapper { overflow-x: hidden; }
+
+/* ============================================================
+TABLET / iPad — 769px – 1024px
 ============================================================ */
 @media (max-width: 1024px) {
-.stats-grid { grid-template-columns: repeat(2, 1fr); }
-.form-grid { grid-template-columns: repeat(2, 1fr); }
+  :root { --sidebar-w: 200px; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-grid  { grid-template-columns: repeat(2, 1fr); }
+  .quick-actions { grid-template-columns: repeat(2, 1fr); }
+
+  .content { padding: 24px; }
+  .topbar  { padding: 0 20px; }
+
+  /* Step wizard — más compacto */
+  .step-meta .step-name { font-size: 11px; }
+  .step-meta .step-num  { font-size: 9px; }
+  .step-line { margin: 0 6px; }
+
+  /* Card header — permitir wrap */
+  .card-header { flex-wrap: wrap; gap: 10px; }
+
+  /* Topbar actions — reducir gap */
+  .topbar-actions { gap: 8px; }
+
+  /* Modal box — más ancho en tablet */
+  .modal-box { width: 90%; max-width: 680px; }
+
+  /* Pacientes header — wrap */
+  #patients .card-header { flex-wrap: wrap; gap: 10px; }
+  #patients .card-header > div { flex-wrap: wrap; gap: 8px; }
 }
+
+/* ============================================================
+SMARTPHONES GRANDES — 481px – 768px
+============================================================ */
 @media (max-width: 768px) {
-.sidebar { transform: translateX(-100%); }
-.sidebar.open { transform: translateX(0); }
-.main-wrapper { margin-left: 0; }
-.hamburger { display: block; }
-.content { padding: 16px; }
-.topbar { padding: 0 16px; }
-.stats-grid { grid-template-columns: repeat(2, 1fr); }
-.form-grid { grid-template-columns: 1fr; }
-.quick-actions { grid-template-columns: 1fr; }
-.col-span-2, .col-span-3 { grid-column: span 1; }
+  /* ── Sidebar — off-canvas ── */
+  .sidebar {
+    transform: translateX(-100%);
+    width: 260px;
+    z-index: 200;
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  /* ── Overlay cuando sidebar está abierto ── */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 199;
+  }
+  .sidebar-overlay.show { display: block; }
+
+  /* ── Layout principal ── */
+  .main-wrapper { margin-left: 0; width: 100%; }
+  .hamburger    { display: flex; align-items: center; }
+
+  /* ── Topbar ── */
+  .topbar { padding: 0 14px; height: 56px; }
+  .topbar-title { font-size: 13px; }
+  .topbar-actions { gap: 6px; }
+  /* Ocultar botones de tema en móvil para ahorrar espacio */
+  .theme-btn { width: 22px; height: 22px; }
+
+  /* ── Content ── */
+  .content { padding: 14px; }
+
+  /* ── Hero ── */
+  .hero { padding: 24px 20px; }
+  .hero h2 { font-size: 20px; }
+
+  /* ── Stats ── */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .stat-card { padding: 14px; }
+  .stat-card .value { font-size: 22px; }
+
+  /* ── Formularios ── */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .col-span-2, .col-span-3 { grid-column: span 1; }
+  .form-control { font-size: 14px; padding: 11px 14px; }
+
+  /* ── Quick actions ── */
+  .quick-actions { grid-template-columns: 1fr; gap: 10px; }
+
+  /* ── Buttons — navegación de pasos ── */
+  .btn { white-space: nowrap; }
+
+  /* Botones de navegación de pasos — full width en columna */
+  [style*="display:flex;justify-content:space-between"] {
+    /* No sobreescribir con !important — se maneja con clases dedicadas */
+  }
+  .step-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .step-nav .btn { width: 100%; justify-content: center; }
+
+  /* ── Step wizard — compacto ── */
+  .steps {
+    padding: 14px 12px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 0;
+  }
+  .step-dot  { width: 26px; height: 26px; font-size: 11px; flex-shrink: 0; }
+  .step-meta { margin-left: 6px; }
+  .step-meta .step-name { font-size: 10px; }
+  .step-meta .step-num  { display: none; }
+  .step-line { min-width: 16px; margin: 0 4px; flex-shrink: 1; }
+
+  /* ── Tables — scroll horizontal ── */
+  .presc-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .presc-table { min-width: 600px; }
+  .presc-table input { min-width: 52px; }
+
+  /* ── Card header — wrap ── */
+  .card-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .card-body { padding: 14px 16px; }
+
+  /* ── Pacientes — search+botones en columna ── */
+  #patients .card-header > div {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  #patients .card-header > div .search-wrap {
+    width: 100%;
+  }
+  #patients .card-header > div .search-wrap input {
+    width: 100% !important;
+  }
+  #patients .card-header > div .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* ── Patient card ── */
+  .patient-card {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .patient-info { margin-left: 10px; }
+  .patient-actions { margin-left: auto; }
+
+  /* ── Vista previa — card header wrap ── */
+  #step5 .card-header > div {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+  #step5 .card-header { flex-wrap: wrap; gap: 8px; }
+  #step5 .card-header .btn { flex: 1; justify-content: center; min-width: 120px; }
+  .format-selector { margin-bottom: 0; flex-wrap: wrap; }
+  .format-option { min-width: 60px; }
+
+  /* ── Rx preview — scroll ── */
+  .rx-preview-wrapper { padding: 12px; overflow-x: auto; }
+  .rx-doc.format-A4,
+  .rx-doc.format-A5 { min-width: 340px; }
+
+  /* ── Settings — logo upload ── */
+  #settings .card-body > div[style*="display:flex"] {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  .logo-upload-zone { width: 100% !important; max-width: 100%; }
+
+  /* ── Modal ── */
+  .modal-box {
+    width: 95%;
+    max-width: 95vw;
+    margin: 10px;
+    max-height: 88vh;
+  }
+  .modal-body  { padding: 16px; }
+  .modal-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+  .modal-footer .btn { flex: 1; justify-content: center; }
+
+  /* ── Backup toast ── */
+  .backup-toast {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+
+  /* ── Backup items ── */
+  .backup-item { flex-wrap: wrap; gap: 8px; }
+  .backup-item-actions { width: 100%; justify-content: flex-end; }
+
+  /* ── Topbar "Nueva Receta" — ocultar texto en muy pequeño ── */
+  .topbar-actions > .btn-accent span { display: none; }
+}
+
+/* ============================================================
+MÓVILES PEQUEÑOS — 320px – 480px
+============================================================ */
+@media (max-width: 480px) {
+  /* ── Tipografía escalable ── */
+  body { font-size: 13px; }
+
+  /* ── Topbar ── */
+  .topbar { padding: 0 10px; height: 52px; }
+  .topbar-title { font-size: 12px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Ocultar botones de tema para liberar espacio */
+  .theme-btn { display: none; }
+  /* Botón nueva receta — solo ícono */
+  .topbar-actions > .btn-accent {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  /* ── Content ── */
+  .content { padding: 10px; }
+
+  /* ── Hero ── */
+  .hero { padding: 18px 14px; margin-bottom: 14px; }
+  .hero h2 { font-size: 17px; }
+  .hero p  { font-size: 12px; }
+
+  /* ── Stats — 1 columna en pantallas muy pequeñas ── */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .stat-card { padding: 12px; }
+  .stat-card .icon { width: 34px; height: 34px; font-size: 15px; margin-bottom: 8px; }
+  .stat-card .value { font-size: 20px; }
+  .stat-card .label { font-size: 10px; }
+
+  /* ── Quick actions — 1 columna ── */
+  .quick-actions { grid-template-columns: 1fr; margin-bottom: 14px; }
+  .quick-card { padding: 12px; gap: 10px; }
+  .quick-card .qc-icon { width: 36px; height: 36px; font-size: 16px; }
+
+  /* ── Cards ── */
+  .card-header { padding: 12px 14px; }
+  .card-header h2, .card-header h3 { font-size: 12px; }
+  .card-body { padding: 12px 14px; }
+
+  /* ── Botones — ancho completo en navegación de pasos ── */
+  .btn-lg { padding: 11px 18px; font-size: 12px; }
+
+  /* ── Steps wizard — muy compacto ── */
+  .steps { padding: 10px 8px; gap: 0; }
+  .step-dot { width: 22px; height: 22px; font-size: 10px; }
+  .step-meta { margin-left: 4px; }
+  .step-meta .step-name { font-size: 9px; letter-spacing: 0; }
+  .step-line { min-width: 10px; }
+
+  /* ── Tablas de refracción — scroll con indicador ── */
+  .presc-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-sm);
+  }
+  /* Hint visual de scroll */
+  .presc-table-wrap::after {
+    content: '← deslizar →';
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    color: var(--c-text-light);
+    padding: 4px 0;
+    letter-spacing: .5px;
+  }
+  .presc-table { min-width: 560px; }
+  .presc-table thead th { font-size: 9px; padding: 8px 5px; }
+  .presc-table tbody td { padding: 4px 4px; }
+  .presc-table input { font-size: 11px; padding: 4px 3px; min-width: 44px; }
+
+  /* ── Form controls ── */
+  .form-control { font-size: 14px; padding: 10px 12px; }
+  .form-label { font-size: 10px; letter-spacing: .5px; }
+  .form-group { margin-bottom: 12px; }
+
+  /* ── Alerts ── */
+  .alert { padding: 10px 12px; font-size: 11px; }
+
+  /* ── Patient card ── */
+  .patient-card { padding: 10px 12px; }
+  .patient-avatar { width: 34px; height: 34px; font-size: 14px; }
+  .patient-name { font-size: 12px; }
+  .patient-meta { font-size: 10px; }
+  .icon-btn { width: 28px; height: 28px; font-size: 12px; }
+
+  /* ── Rx preview ── */
+  .rx-preview-wrapper { padding: 8px; }
+  .rx-doc.format-A4,
+  .rx-doc.format-A5 { min-width: 300px; font-size: 10px; }
+  .rx-doc.format-A4 { padding: 16px 14px; }
+  .rx-doc.format-A5 { padding: 12px 12px; }
+  .rx-clinic-info .rx-clinic-name { font-size: 13px; }
+
+  /* ── Settings — logo zone ── */
+  .logo-upload-zone { width: 100% !important; }
+
+  /* ── Login card ── */
+  .login-card {
+    padding: 32px 20px 28px;
+    margin: 12px;
+    max-width: calc(100% - 24px);
+  }
+  .login-title    { font-size: 18px; }
+  .login-subtitle { font-size: 11px; margin-bottom: 24px; }
+  .login-btn-full { padding: 11px; font-size: 12px; }
+
+  /* ── Modals ── */
+  .modal-box { width: 100%; max-width: 100%; margin: 0; border-radius: var(--radius-md) var(--radius-md) 0 0; align-self: flex-end; }
+  .modal-overlay { align-items: flex-end; }
+  .modal-header { padding: 14px 16px; }
+  .modal-footer .btn { min-width: 0; font-size: 11px; padding: 8px 12px; }
+
+  /* ── Backup toast ── */
+  .backup-toast { bottom: 0; right: 0; left: 0; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+
+  /* ── Topbar NUEVA RECETA en mobile pequeño ── */
+  .topbar-actions .btn-accent .btn-text { display: none; }
+
+  /* ── Section divider ── */
+  .section-divider { margin: 16px 0; }
+
+  /* ── Format selector en preview ── */
+  #step5 .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  #step5 .card-header > div {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #step5 .card-header > div .btn { flex: 1; min-width: 100px; justify-content: center; }
 }
 
 /* ============================================================
@@ -1569,6 +1916,9 @@ SIDEBAR
 </div>
 </div>
 </aside>
+<!-- Overlay para cerrar sidebar en móvil -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 <!-- ============================================================
 MAIN WRAPPER
 ============================================================ -->
@@ -2451,9 +2801,23 @@ if (section === 'dashboard') updateDashboard();
 if (section === 'patients') renderPatientsList();
 // Close mobile sidebar
 document.getElementById('sidebar').classList.remove('open');
+const _ov = document.getElementById('sidebarOverlay');
+if (_ov) _ov.classList.remove('show');
+document.body.style.overflow = '';
 }
 function toggleSidebar() {
-document.getElementById('sidebar').classList.toggle('open');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+const isOpen  = sidebar.classList.toggle('open');
+if (overlay) overlay.classList.toggle('show', isOpen);
+document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function closeSidebar() {
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+sidebar.classList.remove('open');
+if (overlay) overlay.classList.remove('show');
+document.body.style.overflow = '';
 }
 
 // ================================================================
