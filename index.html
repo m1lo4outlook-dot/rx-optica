@@ -3704,12 +3704,26 @@ function initSupabase() {
       }
     });
     console.log('[Supabase] ✅ Cliente inicializado');
-    // Conectar ahora que el cliente está listo
-    cargarPacientes()
-      .then(() => loadClinicSettings())
-      .then(() => initRealtime())
-      .then(() => attachSettingsAutosave())
-      .catch(e => console.error('[Supabase] Error inicial:', e));
+    // Conectar con async/await robusto — cada paso independiente
+    (async () => {
+      try {
+        await cargarPacientes();
+        console.log('[Init] ✅ Pacientes listos');
+      } catch(e) { console.error('[Init] Error pacientes:', e); }
+
+      try {
+        await loadClinicSettings();
+        console.log('[Init] ✅ Settings listos');
+      } catch(e) { console.error('[Init] Error settings:', e); }
+
+      try {
+        initRealtime();
+      } catch(e) { console.error('[Init] Error realtime:', e); }
+
+      try {
+        attachSettingsAutosave();
+      } catch(e) { console.error('[Init] Error autosave:', e); }
+    })();
   } catch(e) {
     console.error('[Supabase] Error al inicializar:', e);
     _sb = null;
