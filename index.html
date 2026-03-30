@@ -3838,6 +3838,7 @@ async function loadClinicSettings() {
       console.warn('[Settings] Error al cargar desde Supabase:', error);
       return;
     }
+    console.log('[Settings] Respuesta Supabase — data:', JSON.stringify(data));
     if (data) {
       // Fusionar en settings — SIN sobrescribir logo
       const logoActual = settings.logo;
