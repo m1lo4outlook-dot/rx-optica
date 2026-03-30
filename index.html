@@ -1871,7 +1871,7 @@ SIDEBAR
 ============================================================ -->
 <aside class="sidebar" id="sidebar">
 <!-- Logo -->
-<div class="sidebar-logo" onclick="openLogoUpload()">
+<div class="sidebar-logo">
 <div id="sidebarLogoContainer">
 <!-- Logo se inserta aquí via JS -->
 <div class="sidebar-logo-placeholder">
@@ -3058,11 +3058,12 @@ function buildPrescriptionHTML(patient, format) {
 const v = x => x || '-';
 const s = settings;
 // Logo
-const logoHTML = s.logo
-? `<img src="${s.logo}" style="max-height:56px;max-width:160px;object-fit:contain;">`
+const logoSrc = (typeof LOGO_URL !== 'undefined' && LOGO_URL) ? LOGO_URL : (s.logo || '');
+const logoHTML = logoSrc
+? `<img src="${logoSrc}" style="max-height:56px;max-width:160px;object-fit:contain;">`
 : `<div class="rx-icon"><i class="fas fa-eye"></i></div>`;
 // Watermark CSS var
-const wmStyle = s.logo ? `style="--watermark-url:url('${s.logo}')"` : '';
+const wmStyle = logoSrc ? `style="--watermark-url:url('${logoSrc}')"` : '';
 // Refraction rows helper
 const rRow = (label, obj) => `
 <tr>
@@ -3177,9 +3178,10 @@ ${s.footerText    ? `<br>${s.footerText}` : ''}
 function generatePreview() {
 const patient = collectPatientData();
 const preview = document.getElementById('prescriptionPreview');
-// Apply watermark
-if (settings.logo) {
-preview.style.setProperty('--watermark-url', `url('${settings.logo}')`);
+// Apply watermark using fixed LOGO_URL
+const wmSrc = (typeof LOGO_URL !== 'undefined' && LOGO_URL) ? LOGO_URL : settings.logo;
+if (wmSrc) {
+preview.style.setProperty('--watermark-url', `url('${wmSrc}')`);
 } else {
 preview.style.removeProperty('--watermark-url');
 }
@@ -3268,7 +3270,7 @@ pointer-events: none;
 z-index: -1;
 }
 </style>
-${settings.logo ? `<style>body::before { --wm: url('${settings.logo}'); }</style>` : ''}
+${(typeof LOGO_URL !== 'undefined' && LOGO_URL) ? `<style>body::before { --wm: url('${LOGO_URL}'); }</style>` : (settings.logo ? `<style>body::before { --wm: url('${settings.logo}'); }</style>` : '')}
 </head>
 <body>${content}</body>
 </html>`);
@@ -3566,8 +3568,13 @@ doctorSpecialty: document.getElementById('doctorSpecialty').value,
 footerText:      document.getElementById('footerText').value
 };
 saveData();
+// Persist settings to Supabase (clinic_settings table)
+saveClinicSettings().then(() => {
+  showToast('CONFIGURACIÓN GUARDADA', 'success');
+}).catch(() => {
+  showToast('CONFIGURACIÓN GUARDADA (LOCAL)', 'warning');
+});
 updateSidebarLogo();
-showToast('CONFIGURACIÓN GUARDADA', 'success');
 }
 function loadSettings() {
 loadSettingsToForm();
@@ -3581,7 +3588,7 @@ const keys = ['clinicName','clinicRUC','clinicPhone','clinicAddress','clinicEmai
 'doctorName','doctorLicense','doctorSpecialty','footerText'];
 ids.forEach((id, i) => {
 const el = document.getElementById(id);
-if (el) el.value = settings[keys[i]] || '';
+if (el) el.value = settings[keys[i]] || settings[id] || '';
 });
 if (settings.logo) showLogoPreview(settings.logo);
 }
@@ -3675,7 +3682,9 @@ function initSupabase() {
     console.log('[Supabase] ✅ Cliente inicializado');
     // Conectar ahora que el cliente está listo
     cargarPacientes()
+      .then(() => loadClinicSettings())
       .then(() => initRealtime())
+      .then(() => attachSettingsAutosave())
       .catch(e => console.error('[Supabase] Error inicial:', e));
   } catch(e) {
     console.error('[Supabase] Error al inicializar:', e);
@@ -3765,6 +3774,90 @@ async function eliminarPaciente(id) {
   }
 }
 
+// ================================================================
+// CLINIC SETTINGS — Supabase persistence (tabla: clinic_settings)
+// ================================================================
+
+// Campos que se persisten en Supabase
+const SETTINGS_FIELDS = [
+  'clinicName','clinicRUC','clinicPhone','clinicEmail','clinicAddress',
+  'doctorNameConfig','doctorLicense','doctorSpecialty','footerText'
+];
+
+// Autosave debounce handle
+let _settingsDebounce = null;
+
+// Cargar configuración desde Supabase
+async function loadClinicSettings() {
+  if (!_sb) return;
+  try {
+    const { data, error } = await _sb
+      .from('clinic_settings')
+      .select('*')
+      .eq('id', 'global')
+      .single();
+    if (error && error.code !== 'PGRST116') {
+      console.warn('[Settings] Error al cargar desde Supabase:', error);
+      return;
+    }
+    if (data) {
+      // Fusionar en settings (sin sobrescribir logo)
+      SETTINGS_FIELDS.forEach(f => {
+        if (data[f] !== undefined && data[f] !== null) settings[f] = data[f];
+        // doctorNameConfig → almacenado como doctorNameConfig en Supabase
+      });
+      // doctorName es el alias usado en buildPrescriptionHTML
+      if (data.doctorNameConfig) settings.doctorName = data.doctorNameConfig;
+      localStorage.setItem('rx_settings', JSON.stringify(settings));
+      loadSettingsToForm();
+      updateSidebarLogo();
+      console.log('[Settings] ✅ Configuración cargada desde Supabase');
+    }
+  } catch(e) {
+    console.warn('[Settings] Error en loadClinicSettings:', e);
+  }
+}
+
+// Guardar configuración en Supabase (upsert)
+async function saveClinicSettings() {
+  if (!_sb) return;
+  const row = { id: 'global' };
+  SETTINGS_FIELDS.forEach(f => {
+    const el = document.getElementById(f);
+    row[f] = el ? el.value : (settings[f] || '');
+  });
+  // También guardar doctorNameConfig como doctorName para compatibilidad
+  row.doctorNameConfig = row.doctorNameConfig || settings.doctorName || '';
+  try {
+    const { error } = await _sb
+      .from('clinic_settings')
+      .upsert(row, { onConflict: 'id' });
+    if (error) throw error;
+    console.log('[Settings] ✅ Guardado en Supabase');
+  } catch(e) {
+    console.error('[Settings] Error al guardar en Supabase:', e);
+  }
+}
+
+// Autosave con debounce de 800ms — se dispara desde inputs de settings
+function scheduleSettingsAutosave() {
+  clearTimeout(_settingsDebounce);
+  _settingsDebounce = setTimeout(() => {
+    saveClinicSettings();
+  }, 800);
+}
+
+// Attach autosave listeners a los inputs de configuración
+function attachSettingsAutosave() {
+  SETTINGS_FIELDS.forEach(f => {
+    const el = document.getElementById(f);
+    if (el) {
+      el.addEventListener('input',  scheduleSettingsAutosave);
+      el.addEventListener('change', scheduleSettingsAutosave);
+    }
+  });
+}
+
 async function loadData() {
   // Usado para recargas manuales — el init ya no llama a esta función
   try {
@@ -3779,12 +3872,14 @@ async function loadData() {
     }
     renderBackupList();
   } catch(e) { console.warn('Error loading settings', e); }
+  // Cargar settings desde Supabase (tiene prioridad sobre localStorage)
+  await loadClinicSettings();
   await cargarPacientes();
   initRealtime();
 }
 
 function saveData() {
-  // Settings siguen en localStorage
+  // Settings siguen en localStorage como caché
   localStorage.setItem('rx_settings',    JSON.stringify(settings));
   localStorage.setItem('rx_backup_info', JSON.stringify({ count: backupCount, lastTime: lastBackupTime }));
 }
