@@ -3555,26 +3555,26 @@ recent.innerHTML = patients.slice(0, 6).map(p => `
 // SETTINGS
 // ================================================================
 function saveSettings() {
+const _docVal = document.getElementById('doctorNameConfig').value;
 settings = {
-logo:            settings.logo,
-clinicName:      document.getElementById('clinicName').value,
-clinicRUC:       document.getElementById('clinicRUC').value,
-clinicPhone:     document.getElementById('clinicPhone').value,
-clinicAddress:   document.getElementById('clinicAddress').value,
-clinicEmail:     document.getElementById('clinicEmail').value,
-doctorName:      document.getElementById('doctorNameConfig').value,
-doctorLicense:   document.getElementById('doctorLicense').value,
-doctorSpecialty: document.getElementById('doctorSpecialty').value,
-footerText:      document.getElementById('footerText').value
+logo:             settings.logo,
+clinicName:       document.getElementById('clinicName').value,
+clinicRUC:        document.getElementById('clinicRUC').value,
+clinicPhone:      document.getElementById('clinicPhone').value,
+clinicAddress:    document.getElementById('clinicAddress').value,
+clinicEmail:      document.getElementById('clinicEmail').value,
+doctorName:       _docVal,
+doctorNameConfig: _docVal,
+doctorLicense:    document.getElementById('doctorLicense').value,
+doctorSpecialty:  document.getElementById('doctorSpecialty').value,
+footerText:       document.getElementById('footerText').value
 };
 saveData();
-// Persist settings to Supabase (clinic_settings table)
-saveClinicSettings().then(() => {
-  showToast('CONFIGURACIÓN GUARDADA', 'success');
-}).catch(() => {
-  showToast('CONFIGURACIÓN GUARDADA (LOCAL)', 'warning');
-});
 updateSidebarLogo();
+// Persist settings to Supabase (clinic_settings table)
+saveClinicSettings().then(ok => {
+  showToast(ok ? 'CONFIGURACIÓN GUARDADA EN LA NUBE ✓' : 'CONFIGURACIÓN GUARDADA (LOCAL)', ok ? 'success' : 'warning');
+});
 }
 function loadSettings() {
 loadSettingsToForm();
@@ -3588,7 +3588,7 @@ const keys = ['clinicName','clinicRUC','clinicPhone','clinicAddress','clinicEmai
 'doctorName','doctorLicense','doctorSpecialty','footerText'];
 ids.forEach((id, i) => {
 const el = document.getElementById(id);
-if (el) el.value = settings[keys[i]] || settings[id] || '';
+if (el) el.value = settings[keys[i]] || settings[id] || settings[id.replace('Config','')]  || '';
 });
 if (settings.logo) showLogoPreview(settings.logo);
 }
@@ -3801,17 +3801,19 @@ async function loadClinicSettings() {
       return;
     }
     if (data) {
-      // Fusionar en settings (sin sobrescribir logo)
+      // Fusionar en settings — SIN sobrescribir logo
+      const logoActual = settings.logo;
       SETTINGS_FIELDS.forEach(f => {
         if (data[f] !== undefined && data[f] !== null) settings[f] = data[f];
-        // doctorNameConfig → almacenado como doctorNameConfig en Supabase
       });
-      // doctorName es el alias usado en buildPrescriptionHTML
-      if (data.doctorNameConfig) settings.doctorName = data.doctorNameConfig;
+      // doctorName (usado en buildPrescriptionHTML) = doctorNameConfig (columna Supabase)
+      settings.doctorName       = data.doctorNameConfig || settings.doctorName || '';
+      settings.doctorNameConfig = settings.doctorName;
+      settings.logo             = logoActual; // restaurar logo (no se guarda en clinic_settings)
       localStorage.setItem('rx_settings', JSON.stringify(settings));
       loadSettingsToForm();
       updateSidebarLogo();
-      console.log('[Settings] ✅ Configuración cargada desde Supabase');
+      console.log('[Settings] ✅ Config cargada desde Supabase:', settings);
     }
   } catch(e) {
     console.warn('[Settings] Error en loadClinicSettings:', e);
@@ -3820,22 +3822,30 @@ async function loadClinicSettings() {
 
 // Guardar configuración en Supabase (upsert)
 async function saveClinicSettings() {
-  if (!_sb) return;
-  const row = { id: 'global' };
-  SETTINGS_FIELDS.forEach(f => {
-    const el = document.getElementById(f);
-    row[f] = el ? el.value : (settings[f] || '');
-  });
-  // También guardar doctorNameConfig como doctorName para compatibilidad
-  row.doctorNameConfig = row.doctorNameConfig || settings.doctorName || '';
+  if (!_sb) { console.warn('[Settings] Supabase no listo'); return false; }
+  // Construir fila leyendo settings (ya actualizados por saveSettings)
+  const row = {
+    id:              'global',
+    clinicName:      settings.clinicName      || '',
+    clinicRUC:       settings.clinicRUC       || '',
+    clinicPhone:     settings.clinicPhone     || '',
+    clinicEmail:     settings.clinicEmail     || '',
+    clinicAddress:   settings.clinicAddress   || '',
+    doctorNameConfig: settings.doctorName     || settings.doctorNameConfig || '',
+    doctorLicense:   settings.doctorLicense   || '',
+    doctorSpecialty: settings.doctorSpecialty || '',
+    footerText:      settings.footerText      || ''
+  };
   try {
     const { error } = await _sb
       .from('clinic_settings')
       .upsert(row, { onConflict: 'id' });
     if (error) throw error;
-    console.log('[Settings] ✅ Guardado en Supabase');
+    console.log('[Settings] ✅ Guardado en Supabase:', row);
+    return true;
   } catch(e) {
     console.error('[Settings] Error al guardar en Supabase:', e);
+    return false;
   }
 }
 
