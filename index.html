@@ -3596,116 +3596,55 @@ if (settings.logo) showLogoPreview(settings.logo);
 // LOGO SYSTEM (UPLOAD + URL + PREVIEW + SIDEBAR)
 // ================================================================
 
-function uploadLogo(event) {
-  const file = event.target.files[0];
-  if (!file) return;
 
-  if (file.size > 3 * 1024 * 1024) {
-    showToast('EL ARCHIVO DEBE SER MENOR A 3MB', 'error');
-    return;
-  }
+// ================================================================
+// LOGO FIJO (URL GLOBAL - SIN UPLOAD)
+// ================================================================
 
-  const reader = new FileReader();
-  reader.onload = e => {
-    setLogo(e.target.result);
-    showToast('LOGO CARGADO CORRECTAMENTE', 'success');
-  };
+// 🔥 CONFIGURA AQUÍ TU LOGO
+const LOGO_URL = "https://m1lo4outlook-dot.github.io/rx-optica/OP.svg";
 
-  reader.readAsDataURL(file);
-  event.target.value = '';
-}
-
-function setLogoFromURL() {
-  const url = prompt('INGRESA LA URL DEL LOGO:');
-  if (!url) return;
-
-  if (!url.startsWith('http')) {
-    showToast('URL INVÁLIDA', 'error');
-    return;
-  }
-
-  setLogo(url);
-  showToast('LOGO CARGADO DESDE URL', 'success');
-}
-
-function setLogo(src) {
-  settings.logo = src;
-  showLogoPreview(src);
-  updateSidebarLogo();
-}
-
-function showLogoPreview(src) {
-  const zone = document.getElementById('logoUploadZone');
-  const hint = document.getElementById('logoUploadHint');
-
-  if (hint) hint.style.display = 'none';
-
-  const existing = zone.querySelector('img');
-  if (existing) existing.remove();
-
-  const img = document.createElement('img');
-  img.src = src;
-  img.alt = 'LOGO';
-
-  img.onerror = () => showToast('ERROR AL CARGAR LOGO', 'error');
-
-  zone.appendChild(img);
-}
-
-function removeLogo() {
-  settings.logo = null;
-
-  const zone = document.getElementById('logoUploadZone');
-  const hint = document.getElementById('logoUploadHint');
-  const img = zone.querySelector('img');
-
-  if (img) img.remove();
-  if (hint) hint.style.display = '';
-
-  updateSidebarLogo();
-  showToast('LOGO ELIMINADO', 'info');
-}
-
-function openLogoUpload() {
-  navigateTo(
-    'settings',
-    document.querySelector('.nav-item[data-section="settings"]')
-  );
-
-  setTimeout(() => {
-    document.getElementById('logoUpload').click();
-  }, 300);
-}
-
+// ================================================================
+// SIDEBAR LOGO
+// ================================================================
 function updateSidebarLogo() {
   const container = document.getElementById('sidebarLogoContainer');
-
   if (!container) return;
 
-  if (settings.logo) {
-    container.innerHTML = `
-      <img class="sidebar-logo-img" src="${settings.logo}" alt="LOGO">
-    `;
-  } else {
-    container.innerHTML = `
-      <div class="sidebar-logo-placeholder">
-        <div class="sidebar-logo-icon">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="32" cy="32" rx="28" ry="16" stroke="white" stroke-width="3"/>
-            <circle cx="32" cy="32" r="9" fill="white" opacity=".9"/>
-            <circle cx="29" cy="29" r="3" fill="rgba(26,61,92,.6)"/>
-          </svg>
-        </div>
-        <div class="sidebar-logo-text">
-          <h1>SISTEMA RECETAS</h1>
-          <p>OFTALMOLÓGICAS V5.0</p>
-        </div>
-      </div>
-    `;
-  }
+  container.innerHTML = `
+    <img
+      class="sidebar-logo-img"
+      src="${LOGO_URL}"
+      alt="LOGO"
+      onerror="this.src='https://via.placeholder.com/150x80?text=LOGO'"
+    >
+  `;
 }
 
+// ================================================================
+// PREVIEW (OPCIONAL - SI YA LO USABAS EN CONFIG)
+// ================================================================
+function showLogoPreview() {
+  const zone = document.getElementById('logoUploadZone');
+  if (!zone) return;
 
+  zone.innerHTML = `
+    <img
+      src="${LOGO_URL}"
+      alt="LOGO"
+      style="max-width:100%;height:auto;"
+      onerror="this.src='https://via.placeholder.com/150x80?text=LOGO'"
+    >
+  `;
+}
+
+// ================================================================
+// INICIALIZACIÓN
+// ================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  updateSidebarLogo();
+  showLogoPreview();
+});
 
 
 
@@ -3743,6 +3682,7 @@ function initSupabase() {
     _sb = null;
   }
 }
+
 
 // ================================================================
 // DATA PERSISTENCE — Supabase
