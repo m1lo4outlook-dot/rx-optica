@@ -3571,9 +3571,15 @@ footerText:       document.getElementById('footerText').value
 };
 saveData();
 updateSidebarLogo();
+showToast('GUARDANDO CONFIGURACIÓN...', 'info');
 // Persist settings to Supabase (clinic_settings table)
 saveClinicSettings().then(ok => {
-  showToast(ok ? 'CONFIGURACIÓN GUARDADA EN LA NUBE ✓' : 'CONFIGURACIÓN GUARDADA (LOCAL)', ok ? 'success' : 'warning');
+  if (ok) {
+    showToast('CONFIGURACIÓN GUARDADA EN LA NUBE ✓', 'success');
+  } else {
+    showToast('ERROR AL GUARDAR EN LA NUBE — REVISE CONSOLA', 'error');
+    console.error('[Settings] _sb estado:', _sb, '| URL:', typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "no definida");
+  }
 });
 }
 function loadSettings() {
@@ -3678,7 +3684,19 @@ function initSupabase() {
       setTimeout(initSupabase, 500);
       return;
     }
-    _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      },
+      global: {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+        }
+      }
+    });
     console.log('[Supabase] ✅ Cliente inicializado');
     // Conectar ahora que el cliente está listo
     cargarPacientes()
@@ -3793,10 +3811,10 @@ async function loadClinicSettings() {
   try {
     const { data, error } = await _sb
       .from('clinic_settings')
-      .select('*')
+      .select('id,clinicName,clinicRUC,clinicPhone,clinicEmail,clinicAddress,doctorNameConfig,doctorLicense,doctorSpecialty,footerText')
       .eq('id', 'global')
-      .single();
-    if (error && error.code !== 'PGRST116') {
+      .maybeSingle();
+    if (error) {
       console.warn('[Settings] Error al cargar desde Supabase:', error);
       return;
     }
@@ -3822,7 +3840,15 @@ async function loadClinicSettings() {
 
 // Guardar configuración en Supabase (upsert)
 async function saveClinicSettings() {
-  if (!_sb) { console.warn('[Settings] Supabase no listo'); return false; }
+  // Si _sb aún no está listo, esperar hasta 5 segundos con reintentos
+  if (!_sb) {
+    let waited = 0;
+    while (!_sb && waited < 5000) {
+      await new Promise(r => setTimeout(r, 200));
+      waited += 200;
+    }
+    if (!_sb) { console.warn('[Settings] Supabase no disponible tras espera'); return false; }
+  }
   // Construir fila leyendo settings (ya actualizados por saveSettings)
   const row = {
     id:              'global',
@@ -3837,14 +3863,31 @@ async function saveClinicSettings() {
     footerText:      settings.footerText      || ''
   };
   try {
-    const { error } = await _sb
+    // Intentar UPDATE primero (la fila global ya existe)
+    console.log('[Settings] Guardando en Supabase...', row);
+    const { error: errUpdate } = await _sb
       .from('clinic_settings')
-      .upsert(row, { onConflict: 'id' });
-    if (error) throw error;
-    console.log('[Settings] ✅ Guardado en Supabase:', row);
+      .update({
+        clinicName:       row.clinicName,
+        clinicRUC:        row.clinicRUC,
+        clinicPhone:      row.clinicPhone,
+        clinicEmail:      row.clinicEmail,
+        clinicAddress:    row.clinicAddress,
+        doctorNameConfig: row.doctorNameConfig,
+        doctorLicense:    row.doctorLicense,
+        doctorSpecialty:  row.doctorSpecialty,
+        footerText:       row.footerText
+      })
+      .eq('id', 'global');
+    if (errUpdate) {
+      console.error('[Settings] Error UPDATE:', errUpdate);
+      throw errUpdate;
+    }
+    console.log('[Settings] ✅ Guardado correctamente en Supabase');
     return true;
   } catch(e) {
-    console.error('[Settings] Error al guardar en Supabase:', e);
+    console.error('[Settings] ❌ Error completo:', JSON.stringify(e, null, 2));
+    console.error('[Settings] Mensaje:', e.message, '| Code:', e.code, '| Details:', e.details, '| Hint:', e.hint);
     return false;
   }
 }
